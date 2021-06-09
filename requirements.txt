@@ -3,4 +3,4 @@ black==19.10b0
 matplotlib==3.3.3
 pandas==1.1.4
 seaborn==0.11.0
-streamlit>=0.76.0
+streamlit>=0.82.0

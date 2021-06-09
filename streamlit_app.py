@@ -64,14 +64,16 @@ if __name__ == "__main__":
         user_chars = st.beta_expander("User Characteristics")
         with user_chars:
             external_risk = st.number_input(
-                label="Enter the user's environmental risk level between 0 and 1\n(composite of EXTERNAL factors motivating the user to use/increase dose)",
+                label="Enter the user's external risk level",
+                help="External risk represents a composite of external/environmental factors (e.g. social determinants of health) motivating the user to use opioids and seek increased effects from them.",
                 min_value=0.05,
                 max_value=1.0,
                 value=0.5,
                 step=0.05,
             )
             internal_risk = st.number_input(
-                label="Enter the user's biological risk level between 0 and 1\n(composite of INTERNAL factors motivating the user to use/increase dose)",
+                label="Enter the user's internal risk level",
+                help="Internal risk represents a composite of internal/biological factors (e.g. risk tolerance) motivating the user to use opioids and seek increased effects from them.",
                 min_value=0.05,
                 max_value=1.0,
                 value=0.5,
@@ -81,6 +83,7 @@ if __name__ == "__main__":
         with sim_params:
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
+                help="The user starts the simulation taking their preferred dose consistently. This parameter controls their preferred dose at the start of the simulation.",
                 min_value=10,
                 max_value=200,
                 value=50,
@@ -88,27 +91,31 @@ if __name__ == "__main__":
             )
             dose_increase = st.slider(
                 label="Select the amount the user will add when increasing dose",
+                help="When the user is no longer satisfied with the effect of their preferred dose, they may increase their preferred dose. This parameter controls the amount by which they will increase their preferred dose.",
                 min_value=10,
                 max_value=100,
                 value=25,
                 step=5,
             )
             dose_variability = st.slider(
-                label="Select the variability of daily dose relative to user's preferred dose",
+                label="Select the variability of dosage",
+                help="Due to variability in supply and dose measurement, the user's doses may fluctuate from their preferred dose. This parameter controls the proportion by which doses will fluctuate relative to the user's preferred dose.",
                 min_value=0.0,
                 max_value=0.5,
                 value=0.1,
                 step=0.05,
             )
             availability = st.slider(
-                label="Select probability that opioids will be available on a given day",
+                label="Select probability that opioids will be available per day",
+                help="For various reasons (e.g. supply, ability to pay), the user may not always be able to get opioids when they want to. The model updates opioid availability each day. This parameter controls the probability that opioids will be available each day.",
                 min_value=0.1,
                 max_value=1.0,
                 value=0.75,
                 step=0.05,
             )
             fentanyl_prob = st.slider(
-                label="Select probability that a given dose will be contaminated with fentanyl",
+                label="Select probability of fentanyl adulteration per dose",
+                help="In addition to regular variability of dose, some opioid batches may be far more potent than expected due to adulteration with powerful synthetic opioids like fentanyl. This parameter controls the probability that a given dose will be adulterated with a synthetic opioid.",
                 min_value=0.0,
                 max_value=0.05,
                 value=0.001,
@@ -116,6 +123,7 @@ if __name__ == "__main__":
             )
             use_mode = st.selectbox(
                 label="Select user behavior pattern",
+                help="To explore how outcomes change when the user changes their behavior, the simulation includes four fixed user behavior patterns.",
                 options=[
                     "Keep using entire time",
                     "Stop using halfway through",
@@ -125,7 +133,8 @@ if __name__ == "__main__":
                 index=0,
             )
             seed = st.number_input(
-                label="Set the seed for the simulation's random number generator\n(optional - allows replication of results)",
+                label="Set the simulation's random seed",
+                help="Many of the model's processes are stochastic (i.e. randomly varying over time). This optional parameter allows replication of results. For a given set of parameters, the results will always be the same when the seed is kept constant. On the other hand, you can change the seed to explore different possible results for the same set of parameters.",
                 min_value=1,
                 max_value=100_000,
                 value=1,
@@ -170,12 +179,29 @@ if __name__ == "__main__":
     with col1:
         viz_options = st.beta_expander("Visualization Options")
         with viz_options:
-            show_desperation = st.checkbox(label="Show desperation?", value=False)
-            show_effect = st.checkbox(label="Show effect?", value=True)
-            show_habit = st.checkbox(label="Show habit?", value=True)
-            show_zoomed_viz = st.checkbox(label="Show zoomed plot?", value=False)
+            show_desperation = st.checkbox(
+                label="Show desperation?",
+                help="Desperation represents the user's withdrawal symptoms and craving for opioids. Increased desperation motivates the user to take another dose.",
+                value=False,
+            )
+            show_effect = st.checkbox(
+                label="Show effect?",
+                help="Effect represents the user's perception of the opioid's effect. When their habit increases, a given dose will have less effect.",
+                value=True,
+            )
+            show_habit = st.checkbox(
+                label="Show habit?",
+                help="Habit represents the user's adaptation to past doses. When they take a dose many times in succession, their habit increases, reducing their perceived effect.",
+                value=True,
+            )
+            show_zoomed_viz = st.checkbox(
+                label="Show zoomed plot?",
+                help="The zoomed plot allows you to zoom in on a shorter time period and view more detail.",
+                value=False,
+            )
             zoomed_viz_start = st.slider(
                 label="Select starting day of zoomed plot",
+                help="Check the x-axis of the main plot to estimate the starting day of the area you want to zoom in on.",
                 min_value=0,
                 max_value=730,
                 value=0,
@@ -183,6 +209,7 @@ if __name__ == "__main__":
             )
             zoomed_viz_duration = st.slider(
                 label="Select duration in days of zoomed plot",
+                help="Shorter duration will allow you to see more detail.",
                 min_value=10,
                 max_value=200,
                 value=30,
