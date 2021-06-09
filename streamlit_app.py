@@ -168,18 +168,21 @@ if __name__ == "__main__":
     )
 
     with col1:
-        detail_viz_options = st.beta_expander("Visualization Options")
-        with detail_viz_options:
-            show_detail_viz = st.checkbox(label="Show detail plot?", value=False)
-            detail_viz_start = st.slider(
-                label="Select starting day of detail plot",
+        viz_options = st.beta_expander("Visualization Options")
+        with viz_options:
+            show_desperation = st.checkbox(label="Show desperation?", value=False)
+            show_effect = st.checkbox(label="Show effect?", value=True)
+            show_habit = st.checkbox(label="Show habit?", value=True)
+            show_zoomed_viz = st.checkbox(label="Show zoomed plot?", value=False)
+            zoomed_viz_start = st.slider(
+                label="Select starting day of zoomed plot",
                 min_value=0,
                 max_value=730,
                 value=0,
                 step=10,
             )
-            detail_viz_duration = st.slider(
-                label="Select duration in days of detail plot",
+            zoomed_viz_duration = st.slider(
+                label="Select duration in days of zoomed plot",
                 min_value=10,
                 max_value=200,
                 value=30,
@@ -187,10 +190,20 @@ if __name__ == "__main__":
             )
 
     with col2:
-        fig = visualize(sim)
+        fig = visualize(
+            sim,
+            show_desperation=show_desperation,
+            show_habit=show_habit,
+            show_effect=show_effect,
+        )
         st.pyplot(fig, dpi=300)
-        if show_detail_viz is True:
-            detail_fig = visualize(
-                sim, start_day=detail_viz_start, duration=detail_viz_duration
+        if show_zoomed_viz is True:
+            zoomed_fig = visualize(
+                sim,
+                start_day=zoomed_viz_start,
+                duration=zoomed_viz_duration,
+                show_desperation=show_desperation,
+                show_habit=show_habit,
+                show_effect=show_effect,
             )
-            st.pyplot(detail_fig, dpi=300)
+            st.pyplot(zoomed_fig, dpi=300)
