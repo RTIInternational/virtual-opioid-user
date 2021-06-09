@@ -12,11 +12,12 @@
 - `inputs` contains all data files used in the simulation.
 - `notebooks` contains some Jupyter notebooks which were used during development of some nmodel features. They are included for reference but do not affect the main model's functionality.
 - `vou` contains the main Virtual Opioid User model, structured as a Python package. 
+
 ## Running the model
-VOU is built as a Streamlit app. Once released, it will be hosted on Streamlit Sharing for public access. During development, you can run the app locally. Follow these steps:
+VOU is built as a Streamlit app. Once released, it will be hosted on Streamlit Sharing for public access. During development, you can run the app locally. To do so, follow these steps:
+
 1. Clone this repository to your local machine.
-1. From the repository root, `cd vou`.
 1. Create a Python virtual environment. VOU was developed in Python 3.8. Other versions may cause compatibility issues.
 1. Activate the virtual environment.
 1. Install dependencies with `pip install -r requirements.txt`.
-1. Run the Streamlit app with `streamlit run vou/streamlit_app.py`
+1. Run the Streamlit app with `streamlit run streamlit_app.py`

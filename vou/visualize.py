@@ -41,7 +41,7 @@ def visualize(person: Person, start_day: int = 0, duration: int = 730):
         person.effect[start_time:end_time], label="Effect", color=palette[2], zorder=1
     )
 
-    ax1.set_ylabel("Morphine Milligram Equivalents")
+    ax1.set_ylabel("Morphine Milligram Equivalents (MME)")
 
     ax2 = ax1.twinx()
     ax2.plot(
