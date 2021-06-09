@@ -215,6 +215,24 @@ if __name__ == "__main__":
                 value=30,
                 step=5,
             )
+        readme = st.beta_expander("README")
+        with readme:
+            st.write(
+                """
+                Virtual Opioid User (VOU) simulates an individual's opioid use over time.
+
+                By adjusting their characteristics and model parameters, you can explore how
+                various internal and external factors affect their opioid use trajectory.
+                
+                For example, try increasing the user's starting dose. Users with a high starting
+                dose are more likely to increase their dose over time.
+
+                Hover on the (?) icon next to each parameter for additional info.
+
+                Note: VOU assumes the individual is already a consistent opioid user.
+                It does not model their pathway from abstinence to use.
+                """
+            )
 
     with col2:
         fig = visualize(
@@ -234,3 +252,6 @@ if __name__ == "__main__":
                 show_effect=show_effect,
             )
             st.pyplot(zoomed_fig, dpi=300)
+        st.markdown(
+            "Virtual Opioid User is an open-source project of [RTI International](https://www.rti.org/). The code base is [on GitHub](https://github.com/RTIInternational/virtual-opioid-user)."
+        )
