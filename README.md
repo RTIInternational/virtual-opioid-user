@@ -1,6 +1,8 @@
 # Virtual Opioid User
 
-**Virtual Opioid User (VOU)** simulates an individual's opioid use over time. 
+**Virtual Opioid User (VOU)** simulates an individual's opioid use over time.
+
+**[Explore the app here!](https://share.streamlit.io/rtiinternational/virtual-opioid-user/main)**
 
 **VOU is:**
 - **Continuous:** opioid use is governed by continuous processes rather than discrete states and transition probabilities. 
@@ -14,7 +16,9 @@
 - `vou` contains the main Virtual Opioid User model, structured as a Python package. 
 
 ## Running the model
-VOU is built as a Streamlit app. Once released, it will be hosted on Streamlit Sharing for public access. During development, you can run the app locally. To do so, follow these steps:
+App users can [run the app on Streamlit Sharing](https://share.streamlit.io/rtiinternational/virtual-opioid-user/main). 
+
+Developers wishing to run the app locally can follow these steps:
 
 1. Clone this repository to your local machine.
 1. Create a Python virtual environment. VOU was developed in Python 3.8. Other versions may cause compatibility issues.
