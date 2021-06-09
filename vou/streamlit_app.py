@@ -28,7 +28,7 @@ def simulate(
     Streamlit cached function to instantiate a Person and Simulation and run the
     simulation. Looks a bit repetitive, but this allows us to take advantage of
     Streamlit caching and avoid running the simulation repeatedly when an app user
-    changes detailed visualization parameters.
+    changes visualization parameters.
     """
     person = Person(
         rng=rng,
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     )
 
     with col1:
-        detail_viz_options = st.beta_expander("Detail Visualization Options")
+        detail_viz_options = st.beta_expander("Visualization Options")
         with detail_viz_options:
             show_detail_viz = st.checkbox(label="Show detail plot?", value=False)
             detail_viz_start = st.slider(
