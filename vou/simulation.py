@@ -5,6 +5,8 @@ import math
 from random import Random
 from itertools import repeat
 
+import numpy as np
+
 
 class Simulation:
     def __init__(
@@ -98,8 +100,7 @@ class Simulation:
             self.person.threshold = self.compute_threshold()
 
     def compute_concentration(
-        self,
-        A: float = 0.25,
+        self, A: float = 0.25,
     ):
         """
         Computes the person's concentration of opioids in MME at a time step.
@@ -110,8 +111,7 @@ class Simulation:
         )
 
     def compute_effect(
-        self,
-        A: float = 0.25,
+        self, A: float = 0.25,
     ):
         """
         Computes opioid's effect on the the person at a time step, given their
@@ -317,10 +317,7 @@ class Simulation:
         self.integralD.append(ALPHA4 * self.integralD[-1] + self.integralC[-1] / BETA4)
 
     def compute_threshold(
-        self,
-        B1=0.0001,
-        B2=0.01,
-        B3=0.5,
+        self, B1=0.0001, B2=0.01, B3=0.5,
     ):
         """
         Computes the person's threshold to take another dose for the next time step.
@@ -329,10 +326,19 @@ class Simulation:
         Threshold is calculated from integrals of concentration (which should be updated
         prior to computing this threshold at each time step). B1-3 are calibrated
         parameters and not intended to be varied during simulation.
+
+        The threshold is then adjusted by the person's risk logit.
         """
-        return (B1 * self.integralB[-1] + B2 * self.integralC[-1]) / (
+        thresh = (B1 * self.integralB[-1] + B2 * self.integralC[-1]) / (
             1 + B3 * self.integralA[-1]
         )
+        if -5 < self.person.risk_logit < 5:
+            return thresh
+        else:
+            if self.person.risk_logit < 0:
+                return thresh / np.abs(self.person.risk_logit)
+            else:
+                return thresh * self.person.risk_logit
 
     def compute_desperation(self):
         """
