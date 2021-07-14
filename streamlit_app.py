@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 label="Select the amount the user will add when increasing dose",
                 help="When the user is no longer satisfied with the effect of their preferred dose, they may increase their preferred dose. This parameter controls the amount by which they will increase their preferred dose.",
                 min_value=10,
-                max_value=100,
+                max_value=50,
                 value=25,
                 step=5,
             )
