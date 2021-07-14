@@ -61,6 +61,38 @@ if __name__ == "__main__":
     col1, col2 = st.beta_columns([1, 3])
 
     with col1:
+        readme = st.beta_expander("README")
+        with readme:
+            st.markdown(
+                """
+                Virtual Opioid User (VOU) simulates an individual's opioid use over time.
+
+                #### Reading the plot
+                - *Concentration* represents the amount of opioid, in morphine milligram equivalents,
+                in the user's system at a given time.
+
+                - *Effect* represents the user's perception of the opioid's effect. When their habit
+                increases, a given dose will have less effect.
+
+                - *Habit* represents the user's adaptation to past doses. When they take a dose many
+                times in succession, their habit increases, reducing their perceived effect.
+
+                - *Desperation* represents the user's withdrawal symptoms and craving for opioids.
+                Increased desperation motivates the user to take another dose.
+
+                #### Using the app
+                By adjusting user characteristics and model parameters, you can explore how
+                various internal and external factors affect the user's opioid use trajectory.
+                
+                For example, try increasing the user's starting dose. Users with a high starting
+                dose are more likely to increase their dose over time.
+
+                Hover on the (?) icon next to each parameter for additional info.
+
+                Note: VOU assumes the individual is already a consistent opioid user.
+                It does not model their pathway from abstinence to use.
+                """
+            )
         user_chars = st.beta_expander("User Characteristics")
         with user_chars:
             external_risk = st.number_input(
@@ -214,24 +246,6 @@ if __name__ == "__main__":
                 max_value=200,
                 value=30,
                 step=5,
-            )
-        readme = st.beta_expander("README")
-        with readme:
-            st.write(
-                """
-                Virtual Opioid User (VOU) simulates an individual's opioid use over time.
-
-                By adjusting their characteristics and model parameters, you can explore how
-                various internal and external factors affect their opioid use trajectory.
-                
-                For example, try increasing the user's starting dose. Users with a high starting
-                dose are more likely to increase their dose over time.
-
-                Hover on the (?) icon next to each parameter for additional info.
-
-                Note: VOU assumes the individual is already a consistent opioid user.
-                It does not model their pathway from abstinence to use.
-                """
             )
 
     with col2:
