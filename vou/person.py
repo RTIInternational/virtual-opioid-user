@@ -37,6 +37,7 @@ class Person:
         self.external_risk = external_risk
         self.internal_risk = internal_risk
         self.update_downward_pressure()
+        self.set_risk_logit()
         self.behavior_when_resuming_use = behavior_when_resuming_use
         self.post_OD_use_pause = None
         self.last_dose_increase = 0
@@ -84,6 +85,15 @@ class Person:
         self.downward_pressure = baseline_dp + (
             (1 - baseline_dp) / (1 + np.exp(-0.005 * (self.dose - midpoint)))
         )
+
+    def set_risk_logit(self):
+        """
+        The risk logit is used to adjust the person's threshold for opioid use. Persons 
+        with extreme risk levels (low or high) will have extreme threshold multipliers,
+        while persons with normal risk levels will have threshold multipliers close to zero. 
+        """
+        avg_risk = (self.external_risk + self.internal_risk) / 2
+        self.risk_logit = np.log(avg_risk / (1 - avg_risk)) / 0.25
 
     def lower_dose_after_pause(self):
         """
@@ -166,9 +176,7 @@ class Person:
             return dose_reduction
 
     def will_increase_dose(
-        self,
-        effect_window: int = 20,
-        increase_threshold: float = 0.4,
+        self, effect_window: int = 20, increase_threshold: float = 0.4,
     ):
         """
         Checks whether the person will increase their dose. Based on a comparison of
