@@ -267,5 +267,5 @@ if __name__ == "__main__":
             )
             st.pyplot(zoomed_fig, dpi=300)
         st.markdown(
-            "Virtual Opioid User is an open-source project of [RTI International](https://www.rti.org/). The code base is [on GitHub](https://github.com/RTIInternational/virtual-opioid-user)."
+            "Copyright 2021 [RTI International](https://www.rti.org/). Virtual Opioid User is an open source project. The code base is on [GitHub](https://github.com/RTIInternational/virtual-opioid-user)."
         )
