@@ -1,6 +1,8 @@
 # Project-specific files and folders
 .DS_Store
 .vscode/*
+experiment/scenarios/*
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

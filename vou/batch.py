@@ -34,7 +34,7 @@ class BatchSimulation:
 
         def simulate_one_person(self, seed: int):
             person = Person(
-                rng=self.rng,
+                rng=Random(seed),
                 starting_dose=self.params["starting_dose"],
                 dose_increase=self.params["dose_increase"],
                 base_threshold=self.params["base_threshold"],
@@ -45,7 +45,7 @@ class BatchSimulation:
             )
             simulation = Simulation(
                 person=person,
-                rng=self.rng,
+                rng=Random(seed),
                 days=self.params["days"],
                 stop_use_day=self.params["stop_use_day"],
                 resume_use_day=self.params["resume_use_day"],
@@ -57,10 +57,20 @@ class BatchSimulation:
             return person
 
         if parallel is False:
-            self.people = [simulate_one_person(s) for s in seeds]
+            self.people = [simulate_one_person(self, s) for s in seeds]
 
         if parallel is True:
             num_cores = multiprocessing.cpu_count()
             self.people = Parallel(n_jobs=num_cores)(
-                delayed(simulate_one_person)(s) for s in seeds
+                delayed(simulate_one_person)(self, s) for s in seeds
             )
+
+
+# batch_sim = BatchSimulation(
+#             params=Path('experiment/scenarios/availability/0.1/params.json'),
+#             seed=1,
+#             n_iterations=10,
+#         )
+
+# batch_sim.simulate()
+# type(batch_sim)

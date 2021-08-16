@@ -1,0 +1,15 @@
+{
+    "starting_dose": 100,
+    "dose_increase": 25,
+    "base_threshold": 0.0001,
+    "tolerance_window": 3000,
+    "external_risk": 0.5,
+    "internal_risk": 0.5,
+    "behavior_when_resuming_use": false,
+    "days": 730,
+    "stop_use_day": false,
+    "resume_use_day": false,
+    "dose_variability": 0.1,
+    "availability": 0.9,
+    "fentanyl_prob": 0.0001
+}

@@ -43,6 +43,7 @@ class Person:
         self.last_dose_increase = 0
 
         # A bunch of empty lists to store data during simulation
+        self.preferred_dose = []
         self.concentration = []
         self.desperation = []
         self.habit = []
@@ -203,3 +204,9 @@ class Person:
         self.dose += self.dose_increase
         self.last_dose_increase = t
         self.update_downward_pressure()
+
+    def record_preferred_dose(self):
+        """
+        Appends the person's dose to their preferred dose record.
+        """
+        self.preferred_dose.append(self.dose)

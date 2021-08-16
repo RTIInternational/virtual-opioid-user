@@ -99,6 +99,9 @@ class Simulation:
             # Finally, update the person's threshold for the next iteration
             self.person.threshold = self.compute_threshold()
 
+            # Record the person's preferred dose for this time step
+            self.person.record_preferred_dose()
+
     def compute_concentration(
         self, A: float = 0.25,
     ):
