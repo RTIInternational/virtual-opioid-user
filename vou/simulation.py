@@ -359,3 +359,11 @@ class Simulation:
             ),
             0,
         )
+
+
+if __name__ == "__main__":
+    person = Person(rng=Random(1),)
+
+    simulation = Simulation(person=person, rng=Random())
+    simulation.simulate()
+
