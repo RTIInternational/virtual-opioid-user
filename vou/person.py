@@ -1,5 +1,7 @@
 from random import Random
 from enum import IntEnum, unique
+from itertools import repeat
+from collections import deque
 
 import numpy as np
 
@@ -44,6 +46,8 @@ class Person:
 
         # A bunch of empty lists to store data during simulation
         self.concentration = []
+        self.tolerance_input = deque(repeat(0, self.tolerance_window))
+        self.tolerance_input_sum = 0
         self.desperation = []
         self.habit = []
         self.effect = []

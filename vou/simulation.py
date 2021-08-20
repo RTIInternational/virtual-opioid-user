@@ -59,7 +59,13 @@ class Simulation:
             self.time_since_dose += 1
 
             # Compute the person's concentration of opioid using pharmacokinetic model
-            self.person.concentration.append(self.compute_concentration())
+            conc = self.compute_concentration()
+            self.person.concentration.append(conc)
+
+            # Add concentration to tolerance input
+            self.person.tolerance_input_sum -= self.person.tolerance_input.popleft()
+            self.person.tolerance_input_sum += conc
+            self.person.tolerance_input.append(conc)
 
             # Update opioid availability
             self.update_availability(t)
@@ -231,14 +237,11 @@ class Simulation:
         # conc_multiplier is a calibrated parameter used to increase the concentration
         # prior to the logistic effect function. Without this increase, effect is too
         # small relative to concentration.
-        if t < self.person.tolerance_window:
-            to_pad = self.person.tolerance_window - t
-            pad = list(repeat(0, to_pad))
-            pad.extend(self.person.concentration)
-            rolling_concentration = (sum(pad) / len(pad)) * conc_multiplier
-        else:
-            l = self.person.concentration[-self.person.tolerance_window :]
-            rolling_concentration = (sum(l) / len(l)) * conc_multiplier
+        # input_sum = sum(self.person.tolerance_input)
+        # input_len = len(self.person.tolerance_input)
+        rolling_concentration = (
+            self.person.tolerance_input_sum / self.person.tolerance_window
+        ) * conc_multiplier
         # Compute habit based on a logistic function of the rolling concentration.
         #
         # All of the logistic function parameters are adjusted by dose. This results in
