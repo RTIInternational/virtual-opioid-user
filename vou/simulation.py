@@ -185,8 +185,13 @@ class Simulation:
         self.time_since_dose = 0
         # Update the variable storing the last amount taken for concentration calcs.
         self.last_amount_taken = self.compute_amount_taken()
-        # Recalculate the person's concentration for this time step.
-        self.person.concentration[-1] = self.compute_concentration()
+        # Recalculate the person's concentration for this time step
+        new_conc = self.compute_concentration()
+        self.person.concentration[-1] = new_conc
+        # Add the new concentration to the person's tolerance window
+        self.person.tolerance_input_sum -= self.person.tolerance_input.pop()
+        self.person.tolerance_input_sum += new_conc
+        self.person.tolerance_input.append(new_conc)
 
     def compute_amount_taken(self):
         """
@@ -231,17 +236,13 @@ class Simulation:
         # Compute the rolling mean of the person's opioid concentration using their
         # tolerance window.
         #
-        # If t is less than the tolerance window, pad their concentration history
-        # with zeros
-        #
         # conc_multiplier is a calibrated parameter used to increase the concentration
         # prior to the logistic effect function. Without this increase, effect is too
         # small relative to concentration.
-        # input_sum = sum(self.person.tolerance_input)
-        # input_len = len(self.person.tolerance_input)
         rolling_concentration = (
             self.person.tolerance_input_sum / self.person.tolerance_window
         ) * conc_multiplier
+
         # Compute habit based on a logistic function of the rolling concentration.
         #
         # All of the logistic function parameters are adjusted by dose. This results in
