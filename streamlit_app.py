@@ -58,10 +58,10 @@ if __name__ == "__main__":
 
     st.set_page_config(layout="wide")
     st.title("Virtual Opioid User")
-    col1, col2 = st.beta_columns([1, 3])
+    col1, col2 = st.columns([1, 3])
 
     with col1:
-        readme = st.beta_expander("README")
+        readme = st.expander("README")
         with readme:
             st.markdown(
                 """
@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 It does not model their pathway from abstinence to use.
                 """
             )
-        user_chars = st.beta_expander("User Characteristics")
+        user_chars = st.expander("User Characteristics")
         with user_chars:
             external_risk = st.number_input(
                 label="Enter the user's external risk level",
@@ -111,7 +111,7 @@ if __name__ == "__main__":
                 value=0.5,
                 step=0.05,
             )
-        sim_params = st.beta_expander("Simulation Parameters")
+        sim_params = st.expander("Simulation Parameters")
         with sim_params:
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     )
 
     with col1:
-        viz_options = st.beta_expander("Visualization Options")
+        viz_options = st.expander("Visualization Options")
         with viz_options:
             show_desperation = st.checkbox(
                 label="Show desperation?",
