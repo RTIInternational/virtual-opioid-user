@@ -36,6 +36,7 @@ def visualize(
     fig, ax1 = plt.subplots(figsize=(16, 8))
 
     ax1.plot(
+        range(start_time, end_time),
         person.concentration[start_time:end_time],
         label="Concentration",
         color=palette[0],
@@ -43,21 +44,29 @@ def visualize(
     )
     if show_habit:
         ax1.plot(
-            person.habit[start_time:end_time], label="Habit", color=palette[1], zorder=2
+            range(start_time, end_time),
+            person.habit[start_time:end_time],
+            label="Tolerance",
+            color=palette[1],
+            zorder=2,
         )
     if show_effect:
         ax1.plot(
+            range(start_time, end_time),
             person.effect[start_time:end_time],
             label="Effect",
             color=palette[2],
             zorder=1,
         )
+    if len(person.concentration) < end_time:
+        ax1.set_xlim(right=end_time)
 
     ax1.set_ylabel("Morphine Milligram Equivalents (MME)")
 
     if show_desperation:
         ax2 = ax1.twinx()
         ax2.plot(
+            range(start_time, end_time),
             person.desperation[start_time:end_time],
             label="Desperation",
             color=palette[3],

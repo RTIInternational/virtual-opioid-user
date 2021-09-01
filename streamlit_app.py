@@ -77,8 +77,8 @@ if __name__ == "__main__":
                 - *Habit* represents the user's adaptation to past doses. When they take a dose many
                 times in succession, their habit increases, reducing their perceived effect.
 
-                - *Desperation* represents the user's withdrawal symptoms and craving for opioids.
-                Increased desperation motivates the user to take another dose.
+                - *Discomfort* represents the user's withdrawal symptoms and craving for opioids.
+                Increased discomfort motivates the user to take another dose.
 
                 #### Using the app
                 By adjusting user characteristics and model parameters, you can explore how
@@ -89,23 +89,23 @@ if __name__ == "__main__":
 
                 Hover on the (?) icon next to each parameter for additional info.
 
-                Note: VOU assumes the individual is already a consistent opioid user.
-                It does not model their pathway from abstinence to use.
+                Note: VOU does not model any irregular/recreational opioid use prior to the
+                start of daily opioid use.
                 """
             )
         user_chars = st.expander("User Characteristics")
         with user_chars:
             external_risk = st.number_input(
-                label="Enter the user's external risk level",
-                help="External risk represents a composite of external/environmental factors (e.g. social determinants of health) motivating the user to use opioids and seek increased effects from them.",
+                label="Enter the user's social risk level",
+                help="Social risk represents a composite of external/environmental factors (e.g. social determinants of health) motivating the user to use opioids and seek increased effects from them. For example, individuals with less economic opportunity or more adverse childhood experiences are more likely to develop opioid use disorder.",
                 min_value=0.05,
                 max_value=1.0,
                 value=0.5,
                 step=0.05,
             )
             internal_risk = st.number_input(
-                label="Enter the user's internal risk level",
-                help="Internal risk represents a composite of internal/biological factors (e.g. risk tolerance) motivating the user to use opioids and seek increased effects from them.",
+                label="Enter the user's individual risk level",
+                help="Individual risk represents a composite of psychological/biological factors (e.g. risk tolerance) motivating the user to use opioids and seek increased effects from them. For example, individuals with mental health disorders or other comorbidities are more likely to develop opioid use disorder.",
                 min_value=0.05,
                 max_value=1.0,
                 value=0.5,
@@ -212,8 +212,8 @@ if __name__ == "__main__":
         viz_options = st.expander("Visualization Options")
         with viz_options:
             show_desperation = st.checkbox(
-                label="Show desperation?",
-                help="Desperation represents the user's withdrawal symptoms and craving for opioids. Increased desperation motivates the user to take another dose.",
+                label="Show discomfort?",
+                help="Discomfort represents the user's withdrawal symptoms and craving for opioids. Increased discomfort motivates the user to take another dose.",
                 value=False,
             )
             show_effect = st.checkbox(
