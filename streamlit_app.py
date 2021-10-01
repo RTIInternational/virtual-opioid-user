@@ -1,6 +1,7 @@
 from vou.person import Person, BehaviorWhenResumingUse
 from vou.simulation import Simulation
 from vou.visualize import visualize
+from vou.opioid import mme_equivalents
 
 from random import Random
 
@@ -23,6 +24,7 @@ def simulate(
     dose_variability: float = 0.1,
     availability: float = 0.9,
     fentanyl_prob: float = 0.0001,
+    opioid: str = "Hydrocodone",
 ):
     """
     Streamlit cached function to instantiate a Person and Simulation and run the
@@ -30,10 +32,12 @@ def simulate(
     Streamlit caching and avoid running the simulation repeatedly when an app user
     changes visualization parameters.
     """
+    dose_multiplier = mme_equivalents[opioid]
+
     person = Person(
         rng=rng,
-        starting_dose=starting_dose,
-        dose_increase=dose_increase,
+        starting_dose=starting_dose * dose_multiplier,
+        dose_increase=dose_increase * dose_multiplier,
         base_threshold=base_threshold,
         tolerance_window=tolerance_window,
         external_risk=external_risk,
@@ -113,13 +117,31 @@ if __name__ == "__main__":
             )
         sim_params = st.expander("Simulation Parameters")
         with sim_params:
+            opioid = st.selectbox(
+                label="Select the opioid prescribed to the user",
+                help="The user takes one opioid type throughout the simulation. They can increase their dose over time, but always continue to take the same opioid. The chosen opioid/dose combination is converted to morphine milligram equivalents within the simulation.",
+                options=[
+                    "Codeine",
+                    "Dihydrocodeine",
+                    "Hydrocodone",
+                    "Hydromorphone",
+                    "Levorphanol Tartrate",
+                    "Meperidine Hcl",
+                    "Oxycodone",
+                    "Oxymorphone",
+                    "Pentazocine",
+                    "Tapentadol",
+                    "Tramadol",
+                ],
+                index=0,
+            )
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
                 help="The user starts the simulation taking their preferred dose consistently. This parameter controls their preferred dose at the start of the simulation.",
-                min_value=10,
+                min_value=5,
                 max_value=200,
                 value=50,
-                step=10,
+                step=5,
             )
             dose_increase = st.slider(
                 label="Select the amount the user will add when increasing dose",
@@ -206,6 +228,7 @@ if __name__ == "__main__":
         dose_variability=dose_variability,
         availability=availability,
         fentanyl_prob=fentanyl_prob,
+        opioid=opioid,
     )
 
     with col1:
@@ -254,6 +277,7 @@ if __name__ == "__main__":
             show_desperation=show_desperation,
             show_habit=show_habit,
             show_effect=show_effect,
+            opioid=opioid,
         )
         st.pyplot(fig, dpi=300)
         if show_zoomed_viz is True:
@@ -264,6 +288,7 @@ if __name__ == "__main__":
                 show_desperation=show_desperation,
                 show_habit=show_habit,
                 show_effect=show_effect,
+                opioid=opioid,
             )
             st.pyplot(zoomed_fig, dpi=300)
         st.markdown(
