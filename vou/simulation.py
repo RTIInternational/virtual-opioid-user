@@ -1,9 +1,11 @@
 from vou.person import Person, BehaviorWhenResumingUse, OverdoseType
 from vou.utils import logistic
 
+
 import math
 from random import Random
 from itertools import repeat
+from copy import copy
 
 import numpy as np
 
@@ -19,6 +21,7 @@ class Simulation:
         dose_variability: float = 0.1,
         availability: float = 0.9,
         fentanyl_prob: float = 0.0001,
+        counterfeit_prob: float = 0.1,
     ):
         # Parameters
         self.person = person
@@ -29,6 +32,7 @@ class Simulation:
         self.dose_variability = dose_variability
         self.availability = availability
         self.fentanyl_prob = fentanyl_prob
+        self.counterfeit_prob = counterfeit_prob
 
         # Variables used in simulation
         self.time_since_dose = 0
@@ -197,17 +201,28 @@ class Simulation:
         """
         Computes the amount of opioid taken in MME when the person takes a dose.
 
-        First, modifies the person's preferred dose by the dose variability parameter.
+        First, checks whether the dose consists of counterfeit pills. If not, the dose
+        taken is the user's preferred dose exactly. If so, the dose taken is modified
+        by several multipliers.
 
-        Next, checks whether this dose is part of a "bad batch" contaminated with
-        fentanyl. If so, the modified dose is multiplied by a random value:
-        1 + a random draw from an exponential distribution with mean 1.
+        1. The dose variability parameter represents general variation in the purity
+        and consistency of counterfeit pills.
+
+        2. The fentanyl probabiltiy parameter represents the likelihood that a
+        counterfeit pill is part of a "bad batch" contaminated with fentanyl. 
+        If so, the modified dose is multiplied by a random value:
+        1 + a random draw from an exponential distribution with mean 0.25 (the 
+        lambd parameter in random.expovariate is 1 divided by the mean).
         """
-        modified_dose = self.person.dose * self.rng.uniform(
-            1 - self.dose_variability, 1 + self.dose_variability
-        )
-        if self.rng.random() < self.fentanyl_prob:
-            modified_dose = modified_dose * (1 + self.rng.expovariate(1))
+        modified_dose = copy(self.person.dose)
+
+        if self.rng.random() < self.counterfeit_prob:
+
+            modified_dose = self.person.dose * self.rng.uniform(
+                1 - self.dose_variability, 1 + self.dose_variability
+            )
+            if self.rng.random() < self.fentanyl_prob:
+                modified_dose = modified_dose * (1 + self.rng.expovariate(1 / 0.25))
 
         return modified_dose
 
