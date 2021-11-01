@@ -129,6 +129,7 @@ if __name__ == "__main__":
                     "Hydromorphone",
                     "Levorphanol Tartrate",
                     "Meperidine Hcl",
+                    "Morphine",
                     "Oxycodone",
                     "Oxymorphone",
                     "Pentazocine",
@@ -166,15 +167,15 @@ if __name__ == "__main__":
                 help="Illicit opioid pills are often counterfeit. Counterfeit pills vary in purity and dose. This parameter controls the probability that each dose will be counterfeit, leading to greater variability.",
                 min_value=0.0,
                 max_value=0.5,
-                value=0.1,
+                value=0.25,
                 step=0.05,
             )
             dose_variability = st.slider(
                 label="Select the variability of dosage in counterfeit pills",
                 help="Due to variability in supply and dose measurement, the user's doses may fluctuate from their preferred dose. This parameter controls the proportion by which doses will fluctuate relative to the user's preferred dose.",
                 min_value=0.1,
-                max_value=0.5,
-                value=0.2,
+                max_value=0.75,
+                value=0.5,
                 step=0.05,
             )
             fentanyl_prob = st.slider(
@@ -182,8 +183,8 @@ if __name__ == "__main__":
                 help="In addition to regular variability of dose, some counterfeits may be far more potent than expected due to adulteration with powerful synthetic opioids like fentanyl. This parameter controls the probability that a counterfeit dose will be adulterated with a synthetic opioid.",
                 min_value=0.0,
                 max_value=0.5,
-                value=0.01,
-                step=0.01,
+                value=0.25,
+                step=0.05,
             )
             use_mode = st.selectbox(
                 label="Select user behavior pattern",

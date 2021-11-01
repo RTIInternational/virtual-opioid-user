@@ -5,6 +5,7 @@ mme_equivalents = {
     "Hydromorphone": 4,
     "Levorphanol Tartrate": 11,
     "Meperidine Hcl": 0.1,
+    "Morphine": 1,
     "Oxycodone": 1.5,
     "Oxymorphone": 3,
     "Pentazocine": 0.37,
