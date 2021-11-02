@@ -30,6 +30,7 @@ class Person:
         tolerance_window: int = 3_000,
         external_risk: float = 0.5,
         internal_risk: float = 0.5,
+        behavioral_variability: float = 0.1,
         behavior_when_resuming_use: BehaviorWhenResumingUse = None,
     ):
         # Parameters
@@ -40,6 +41,7 @@ class Person:
         self.tolerance_window = tolerance_window
         self.external_risk = external_risk
         self.internal_risk = internal_risk
+        self.behavioral_variability = behavioral_variability
         self.update_downward_pressure()
         self.set_risk_logit()
         self.behavior_when_resuming_use = behavior_when_resuming_use

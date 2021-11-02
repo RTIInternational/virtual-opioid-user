@@ -22,6 +22,7 @@ def simulate(
     stop_use_day: int = None,
     resume_use_day: int = None,
     dose_variability: float = 0.1,
+    behavioral_variability: float = 0.1,
     availability: float = 0.9,
     fentanyl_prob: float = 0.0001,
     counterfeit_prob: float = 0.1,
@@ -43,6 +44,7 @@ def simulate(
         tolerance_window=tolerance_window,
         external_risk=external_risk,
         internal_risk=internal_risk,
+        behavioral_variability=behavioral_variability,
         behavior_when_resuming_use=behavior_when_resuming_use,
     )
     simulation = Simulation(
@@ -115,6 +117,14 @@ if __name__ == "__main__":
                 min_value=0.05,
                 max_value=1.0,
                 value=0.5,
+                step=0.05,
+            )
+            behavioral_variability = st.slider(
+                label="Select the proportion by whcih the user varies their dose from day to day",
+                help="The user always has a preferred dose. If this parameter is 0, they always take that exact dose. If this parameter is 1, they vary their dose by up to 1x their preferred dose each time.",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.1,
                 step=0.05,
             )
         sim_params = st.expander("Simulation Parameters")
@@ -238,6 +248,7 @@ if __name__ == "__main__":
         resume_use_day=resume_use_day,
         dose_variability=dose_variability,
         availability=availability,
+        behavioral_variability=behavioral_variability,
         fentanyl_prob=fentanyl_prob,
         counterfeit_prob=counterfeit_prob,
         opioid=opioid,
