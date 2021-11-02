@@ -88,7 +88,7 @@ def visualize(
             ymin=0,
             ymax=max(person.concentration) / dose_multiplier,
             colors="black",
-            linestyles="dashed",
+            linestyles="dotted",
             label="OD",
             zorder=4,
         )
@@ -105,7 +105,7 @@ def visualize(
             ymin=0,
             ymax=max(person.concentration) / dose_multiplier,
             colors="black",
-            linestyles="dashed",
+            linestyles="dotted",
             label="OD",
             zorder=4,
         )

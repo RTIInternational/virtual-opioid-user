@@ -89,7 +89,7 @@ class Simulation:
             # each time the person takes a dose.
             if self.dose_taken_at_t is True:
                 # Check for overdose.
-                if self.did_person_overdose() is True:
+                if self.person.did_overdose() is True:
                     overdose = self.person.overdose(t)
                     if overdose == OverdoseType.FATAL:
                         break
@@ -282,28 +282,6 @@ class Simulation:
             k=K1 - (self.person.dose * K2),
             x0=self.person.dose * X1,
         )
-
-    def did_person_overdose(self):
-        """
-        Checks whether the most recent opioid effect on the person causes an overdose.
-
-        Based on a random draw and a simple, discrete set of OD probabilities at various
-        effect levels.
-        """
-        effect = self.person.effect[-1]
-
-        if effect > 650:
-            od_prob = 0.5
-        elif effect > 500:
-            od_prob = 0.25
-        elif effect > 350:
-            od_prob = 0.1
-        else:
-            od_prob = 0
-
-        if self.rng.random() < od_prob:
-            # Overdose occurred
-            return True
 
     def compute_concentration_integrals(
         self,

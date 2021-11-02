@@ -1,3 +1,5 @@
+from vou.utils import logistic
+
 from random import Random
 from enum import IntEnum, unique
 from itertools import repeat
@@ -125,6 +127,42 @@ class Person:
         elif self.rng.random() < self.downward_pressure:
             return False
         else:
+            return True
+
+    def did_overdose(self, x0: float = 1243.6936832876, k: float = 0.0143710866):
+        """
+        Checks whether the person's most recent opioid dose causes an overdose.
+
+        First, a baseline OD risk value is generated using a function derived from
+        Dasgupta et al 2016. A logistic model was fitted to their data, along with 
+        the assumption that a dose of 2 grams has an OD probability of 1. (See
+        notebooks/od_risk_curve.ipynb). We use that model to generate the baseline
+        risk value for the person's dose.
+
+        Since the Dasgupta study used prescription data, we assume that these overdose
+        risks are for people who are tolerant to their prescribed dose. Therefore,
+        we add an additional risk multiplier based on the ratio of the dose to the
+        person's tolerance.
+
+        A very general heuristic is that at steady state, (preferred_dose / tolerance)
+        roughly equals 2. We define "excess" as (dose / tolerance) - 1, or roughly 1 at
+        steady state. We multiply the person's baseline OD risk by this excess squared.
+        """
+        dose = self.concentration[-1]
+        tolerance = self.habit[-1]
+
+        # bound extremely low tolerance values to avoid huge excess values
+        tolerance = max(1, tolerance)
+
+        # parameters based on Dasgupta et al 2016 - see notebooks/od_risk_curve.ipynb
+        baseline_OD_risk = logistic(x=dose, L=1, k=k, x0=x0)
+
+        excess = ((dose / tolerance) - 1) ** 2
+
+        tolerance_adjusted_OD_risk = baseline_OD_risk * excess
+
+        if self.rng.random() < tolerance_adjusted_OD_risk:
+            # Overdose occurred
             return True
 
     def overdose(self, t: int):

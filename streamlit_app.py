@@ -136,7 +136,7 @@ if __name__ == "__main__":
                     "Tapentadol",
                     "Tramadol",
                 ],
-                index=0,
+                index=2,
             )
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
