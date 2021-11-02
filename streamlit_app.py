@@ -8,12 +8,12 @@ from random import Random
 import streamlit as st
 
 
-@st.cache
+# @st.cache
 def simulate(
     rng: Random,
     starting_dose: int = 50,
     dose_increase: int = 25,
-    base_threshold: float = 0.0001,
+    base_threshold: float = 0.001,
     tolerance_window: int = 3_000,
     external_risk: float = 0.5,
     internal_risk: float = 0.5,

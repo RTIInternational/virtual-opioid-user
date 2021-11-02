@@ -110,14 +110,28 @@ class Simulation:
             self.person.threshold = self.compute_threshold()
 
     def compute_concentration(
-        self, A: float = 0.25,
+        self, k: float = 0.0594,
     ):
         """
         Computes the person's concentration of opioids in MME at a time step.
         A is a calibrated parameter.
+
+        This pharmacokinetic decay function was calibrated to the half life of morphine.
+        Per Lotsch 2005, 3 studies identifed this value as 2.8 hours, which we use here.
+
+        This model uses 100 time steps per day, so each time step equates to
+        24 * 60 / 100 = 14.4 minutes. The half life in model time units is 
+        2.8 * 60 / 14.4 = 11.667 time units.
+
+        For first-order decay functions, the decay constant k = ln(2) / half_life.
+        Therefore, in our case:
+
+        k = ln(2) / 11.667 = 0.0594
+
+
         """
         return (self.conc_when_dose_taken + self.last_amount_taken) * math.exp(
-            -A * self.time_since_dose
+            -k * self.time_since_dose
         )
 
     def compute_effect(
@@ -314,7 +328,7 @@ class Simulation:
         self.integralD.append(ALPHA4 * self.integralD[-1] + self.integralC[-1] / BETA4)
 
     def compute_threshold(
-        self, B1=0.0001, B2=0.01, B3=0.5,
+        self, B1=0.05, B2=0.1, B3=0.5,
     ):
         """
         Computes the person's threshold to take another dose for the next time step.
