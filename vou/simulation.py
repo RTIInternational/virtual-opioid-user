@@ -76,7 +76,8 @@ class Simulation:
 
             # Check if the person will take another dose
             if self.opioid_available is True:
-                if self.person.will_take_dose(t) is True:
+                # if self.person.will_take_dose(t) is True:
+                if self.person.will_take_dose(t) is True or t % 100 == 0:
                     self.record_dose_taken(t)
 
             # Compute the person's opioid use habit at t
@@ -127,24 +128,25 @@ class Simulation:
         Therefore, in our case:
 
         k = ln(2) / 11.667 = 0.0594
-
-
         """
         return (self.conc_when_dose_taken + self.last_amount_taken) * math.exp(
             -k * self.time_since_dose
         )
 
     def compute_effect(
-        self, A: float = 0.25,
+        self, k: float = 0.0594,
     ):
         """
         Computes opioid's effect on the the person at a time step, given their
         concentration of opioid and opioid use habit.
-        A is a calibrated parameter.
+        
+        k is a calibrated parameter. See docstring for compute_concentration for details.
         """
-        return (
-            self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
-        ) * math.exp(-A * self.time_since_dose)
+        return max(
+            (self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1])
+            * math.exp(-k * self.time_since_dose),
+            0,
+        )
 
     def update_availability(self, t: int):
         """
@@ -251,8 +253,8 @@ class Simulation:
     def compute_habit(
         self,
         t: int,
-        conc_multiplier: int = 3,
-        L1: float = 1.02,
+        conc_multiplier: int = 1.85,
+        L1: float = 1.0275,
         L2: float = 0.58,
         K1: float = 0.2,
         K2: float = 0.0002,
