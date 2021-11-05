@@ -1,4 +1,5 @@
 from vou.person import Person
+from vou.opioid import mme_equivalents
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -19,6 +20,7 @@ def visualize(
     show_desperation: bool = False,
     show_habit: bool = True,
     show_effect: bool = True,
+    opioid: str = "Hydrocodone",
 ):
     """
     Generates a plot of the person's opioid concentration, habit, effect,
@@ -28,6 +30,8 @@ def visualize(
 
     Start day and duration parameters allow control over time frame shown.
     """
+    dose_multiplier = mme_equivalents[opioid]
+
     palette = make_ibm_color_palette()
     start_time = 0 if start_day == 0 else start_day * 100
     duration_time = duration * 100
@@ -37,7 +41,8 @@ def visualize(
 
     ax1.plot(
         range(start_time, end_time),
-        person.concentration[start_time:end_time],
+        [c / dose_multiplier for c in person.concentration[start_time:end_time]]
+        + [0] * max(0, (end_time - start_time) - len(person.concentration)),
         label="Concentration",
         color=palette[0],
         zorder=0,
@@ -45,7 +50,8 @@ def visualize(
     if show_habit:
         ax1.plot(
             range(start_time, end_time),
-            person.habit[start_time:end_time],
+            [h / dose_multiplier for h in person.habit[start_time:end_time]]
+            + [0] * max(0, (end_time - start_time) - len(person.habit)),
             label="Tolerance",
             color=palette[1],
             zorder=2,
@@ -53,7 +59,8 @@ def visualize(
     if show_effect:
         ax1.plot(
             range(start_time, end_time),
-            person.effect[start_time:end_time],
+            [e / dose_multiplier for e in person.effect[start_time:end_time]]
+            + [0] * max(0, (end_time - start_time) - len(person.effect)),
             label="Effect",
             color=palette[2],
             zorder=1,
@@ -61,13 +68,14 @@ def visualize(
     if len(person.concentration) < end_time:
         ax1.set_xlim(right=end_time)
 
-    ax1.set_ylabel("Morphine Milligram Equivalents (MME)")
+    ax1.set_ylabel(f"Milligrams of {opioid}")
 
     if show_desperation:
         ax2 = ax1.twinx()
         ax2.plot(
             range(start_time, end_time),
-            person.desperation[start_time:end_time],
+            [d / dose_multiplier for d in person.desperation[start_time:end_time]]
+            + [0] * max(0, (end_time - start_time) - len(person.desperation)),
             label="Desperation",
             color=palette[3],
             zorder=3,
@@ -78,9 +86,9 @@ def visualize(
         ax2.vlines(
             x=[od for od in person.overdoses if start_time <= od < end_time],
             ymin=0,
-            ymax=max(person.concentration),
+            ymax=max(person.concentration) / dose_multiplier,
             colors="black",
-            linestyles="dashed",
+            linestyles="dotted",
             label="OD",
             zorder=4,
         )
@@ -95,9 +103,9 @@ def visualize(
         ax1.vlines(
             x=[od for od in person.overdoses if start_time <= od < end_time],
             ymin=0,
-            ymax=max(person.concentration),
+            ymax=max(person.concentration) / dose_multiplier,
             colors="black",
-            linestyles="dashed",
+            linestyles="dotted",
             label="OD",
             zorder=4,
         )

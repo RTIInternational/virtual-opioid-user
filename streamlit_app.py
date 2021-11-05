@@ -1,18 +1,19 @@
 from vou.person import Person, BehaviorWhenResumingUse
 from vou.simulation import Simulation
 from vou.visualize import visualize
+from vou.opioid import mme_equivalents
 
 from random import Random
 
 import streamlit as st
 
 
-@st.cache
+# @st.cache
 def simulate(
     rng: Random,
     starting_dose: int = 50,
     dose_increase: int = 25,
-    base_threshold: float = 0.0001,
+    base_threshold: float = 0.001,
     tolerance_window: int = 3_000,
     external_risk: float = 0.5,
     internal_risk: float = 0.5,
@@ -21,8 +22,11 @@ def simulate(
     stop_use_day: int = None,
     resume_use_day: int = None,
     dose_variability: float = 0.1,
+    behavioral_variability: float = 0.1,
     availability: float = 0.9,
     fentanyl_prob: float = 0.0001,
+    counterfeit_prob: float = 0.1,
+    opioid: str = "Hydrocodone",
 ):
     """
     Streamlit cached function to instantiate a Person and Simulation and run the
@@ -30,14 +34,17 @@ def simulate(
     Streamlit caching and avoid running the simulation repeatedly when an app user
     changes visualization parameters.
     """
+    dose_multiplier = mme_equivalents[opioid]
+
     person = Person(
         rng=rng,
-        starting_dose=starting_dose,
-        dose_increase=dose_increase,
+        starting_dose=starting_dose * dose_multiplier,
+        dose_increase=dose_increase * dose_multiplier,
         base_threshold=base_threshold,
         tolerance_window=tolerance_window,
         external_risk=external_risk,
         internal_risk=internal_risk,
+        behavioral_variability=behavioral_variability,
         behavior_when_resuming_use=behavior_when_resuming_use,
     )
     simulation = Simulation(
@@ -49,6 +56,7 @@ def simulate(
         dose_variability=dose_variability,
         availability=availability,
         fentanyl_prob=fentanyl_prob,
+        counterfeit_prob=counterfeit_prob,
     )
     simulation.simulate()
     return person
@@ -111,15 +119,42 @@ if __name__ == "__main__":
                 value=0.5,
                 step=0.05,
             )
+            behavioral_variability = st.slider(
+                label="Select the proportion by whcih the user varies their dose from day to day",
+                help="The user always has a preferred dose. If this parameter is 0, they always take that exact dose. If this parameter is 1, they vary their dose by up to 1x their preferred dose each time.",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.1,
+                step=0.05,
+            )
         sim_params = st.expander("Simulation Parameters")
         with sim_params:
+            opioid = st.selectbox(
+                label="Select the opioid prescribed to the user",
+                help="The user takes one opioid type throughout the simulation. They can increase their dose over time, but always continue to take the same opioid. The chosen opioid/dose combination is converted to morphine milligram equivalents within the simulation.",
+                options=[
+                    "Codeine",
+                    "Dihydrocodeine",
+                    "Hydrocodone",
+                    "Hydromorphone",
+                    "Levorphanol Tartrate",
+                    "Meperidine Hcl",
+                    "Morphine",
+                    "Oxycodone",
+                    "Oxymorphone",
+                    "Pentazocine",
+                    "Tapentadol",
+                    "Tramadol",
+                ],
+                index=2,
+            )
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
                 help="The user starts the simulation taking their preferred dose consistently. This parameter controls their preferred dose at the start of the simulation.",
-                min_value=10,
+                min_value=5,
                 max_value=200,
                 value=50,
-                step=10,
+                step=5,
             )
             dose_increase = st.slider(
                 label="Select the amount the user will add when increasing dose",
@@ -129,14 +164,6 @@ if __name__ == "__main__":
                 value=25,
                 step=5,
             )
-            dose_variability = st.slider(
-                label="Select the variability of dosage",
-                help="Due to variability in supply and dose measurement, the user's doses may fluctuate from their preferred dose. This parameter controls the proportion by which doses will fluctuate relative to the user's preferred dose.",
-                min_value=0.0,
-                max_value=0.5,
-                value=0.1,
-                step=0.05,
-            )
             availability = st.slider(
                 label="Select probability that opioids will be available per day",
                 help="For various reasons (e.g. supply, ability to pay), the user may not always be able to get opioids when they want to. The model updates opioid availability each day. This parameter controls the probability that opioids will be available each day.",
@@ -145,13 +172,29 @@ if __name__ == "__main__":
                 value=0.75,
                 step=0.05,
             )
-            fentanyl_prob = st.slider(
-                label="Select probability of fentanyl adulteration per dose",
-                help="In addition to regular variability of dose, some opioid batches may be far more potent than expected due to adulteration with powerful synthetic opioids like fentanyl. This parameter controls the probability that a given dose will be adulterated with a synthetic opioid.",
+            counterfeit_prob = st.slider(
+                label="Select probability that each dose will be a counterfeit pill",
+                help="Illicit opioid pills are often counterfeit. Counterfeit pills vary in purity and dose. This parameter controls the probability that each dose will be counterfeit, leading to greater variability.",
                 min_value=0.0,
-                max_value=0.05,
-                value=0.001,
-                step=0.001,
+                max_value=0.5,
+                value=0.25,
+                step=0.05,
+            )
+            dose_variability = st.slider(
+                label="Select the variability of dosage in counterfeit pills",
+                help="Due to variability in supply and dose measurement, the user's doses may fluctuate from their preferred dose. This parameter controls the proportion by which doses will fluctuate relative to the user's preferred dose.",
+                min_value=0.1,
+                max_value=0.75,
+                value=0.5,
+                step=0.05,
+            )
+            fentanyl_prob = st.slider(
+                label="Select probability that a counterfeit pill is adulterated with fentanyl",
+                help="In addition to regular variability of dose, some counterfeits may be far more potent than expected due to adulteration with powerful synthetic opioids like fentanyl. This parameter controls the probability that a counterfeit dose will be adulterated with a synthetic opioid.",
+                min_value=0.0,
+                max_value=0.5,
+                value=0.25,
+                step=0.05,
             )
             use_mode = st.selectbox(
                 label="Select user behavior pattern",
@@ -205,7 +248,10 @@ if __name__ == "__main__":
         resume_use_day=resume_use_day,
         dose_variability=dose_variability,
         availability=availability,
+        behavioral_variability=behavioral_variability,
         fentanyl_prob=fentanyl_prob,
+        counterfeit_prob=counterfeit_prob,
+        opioid=opioid,
     )
 
     with col1:
@@ -254,6 +300,7 @@ if __name__ == "__main__":
             show_desperation=show_desperation,
             show_habit=show_habit,
             show_effect=show_effect,
+            opioid=opioid,
         )
         st.pyplot(fig, dpi=300)
         if show_zoomed_viz is True:
@@ -264,6 +311,7 @@ if __name__ == "__main__":
                 show_desperation=show_desperation,
                 show_habit=show_habit,
                 show_effect=show_effect,
+                opioid=opioid,
             )
             st.pyplot(zoomed_fig, dpi=300)
         st.markdown(

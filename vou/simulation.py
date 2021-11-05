@@ -1,9 +1,11 @@
 from vou.person import Person, BehaviorWhenResumingUse, OverdoseType
 from vou.utils import logistic
 
+
 import math
 from random import Random
 from itertools import repeat
+from copy import copy
 
 import numpy as np
 
@@ -19,6 +21,7 @@ class Simulation:
         dose_variability: float = 0.1,
         availability: float = 0.9,
         fentanyl_prob: float = 0.0001,
+        counterfeit_prob: float = 0.1,
     ):
         # Parameters
         self.person = person
@@ -29,6 +32,7 @@ class Simulation:
         self.dose_variability = dose_variability
         self.availability = availability
         self.fentanyl_prob = fentanyl_prob
+        self.counterfeit_prob = counterfeit_prob
 
         # Variables used in simulation
         self.time_since_dose = 0
@@ -72,7 +76,8 @@ class Simulation:
 
             # Check if the person will take another dose
             if self.opioid_available is True:
-                if self.person.will_take_dose(t) is True:
+                # if self.person.will_take_dose(t) is True:
+                if self.person.will_take_dose(t) is True or t % 100 == 0:
                     self.record_dose_taken(t)
 
             # Compute the person's opioid use habit at t
@@ -85,7 +90,7 @@ class Simulation:
             # each time the person takes a dose.
             if self.dose_taken_at_t is True:
                 # Check for overdose.
-                if self.did_person_overdose() is True:
+                if self.person.did_overdose() is True:
                     overdose = self.person.overdose(t)
                     if overdose == OverdoseType.FATAL:
                         break
@@ -106,27 +111,42 @@ class Simulation:
             self.person.threshold = self.compute_threshold()
 
     def compute_concentration(
-        self, A: float = 0.25,
+        self, k: float = 0.0594,
     ):
         """
         Computes the person's concentration of opioids in MME at a time step.
         A is a calibrated parameter.
+
+        This pharmacokinetic decay function was calibrated to the half life of morphine.
+        Per Lotsch 2005, 3 studies identifed this value as 2.8 hours, which we use here.
+
+        This model uses 100 time steps per day, so each time step equates to
+        24 * 60 / 100 = 14.4 minutes. The half life in model time units is 
+        2.8 * 60 / 14.4 = 11.667 time units.
+
+        For first-order decay functions, the decay constant k = ln(2) / half_life.
+        Therefore, in our case:
+
+        k = ln(2) / 11.667 = 0.0594
         """
         return (self.conc_when_dose_taken + self.last_amount_taken) * math.exp(
-            -A * self.time_since_dose
+            -k * self.time_since_dose
         )
 
     def compute_effect(
-        self, A: float = 0.25,
+        self, k: float = 0.0594,
     ):
         """
         Computes opioid's effect on the the person at a time step, given their
         concentration of opioid and opioid use habit.
-        A is a calibrated parameter.
+        
+        k is a calibrated parameter. See docstring for compute_concentration for details.
         """
-        return (
-            self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
-        ) * math.exp(-A * self.time_since_dose)
+        return max(
+            (self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1])
+            * math.exp(-k * self.time_since_dose),
+            0,
+        )
 
     def update_availability(self, t: int):
         """
@@ -197,25 +217,44 @@ class Simulation:
         """
         Computes the amount of opioid taken in MME when the person takes a dose.
 
-        First, modifies the person's preferred dose by the dose variability parameter.
+        First, checks whether the user decides to vary their dose. 
+        
+        Next, check whether the dose consists of counterfeit pills. If not, the dose
+        taken is the user's preferred dose exactly. If so, the dose taken is modified
+        by several multipliers.
 
-        Next, checks whether this dose is part of a "bad batch" contaminated with
-        fentanyl. If so, the modified dose is multiplied by a random value:
-        1 + a random draw from an exponential distribution with mean 1.
+        1. The person's behavioral variability parameter represents variation in the dose
+        the person intends to take relative to their usual preferred dose.
+        
+        2. The dose variability parameter represents general variation in the purity
+        and consistency of counterfeit pills.
+
+        3. The fentanyl probabiltiy parameter represents the likelihood that a
+        counterfeit pill is part of a "bad batch" contaminated with fentanyl. 
+        If so, the modified dose is multiplied by a random value:
+        1 + a random draw from an exponential distribution with mean 0.25 (the 
+        lambd parameter in random.expovariate is 1 divided by the mean).
         """
         modified_dose = self.person.dose * self.rng.uniform(
-            1 - self.dose_variability, 1 + self.dose_variability
+            1 - self.person.behavioral_variability,
+            1 + self.person.behavioral_variability,
         )
-        if self.rng.random() < self.fentanyl_prob:
-            modified_dose = modified_dose * (1 + self.rng.expovariate(1))
+
+        if self.rng.random() < self.counterfeit_prob:
+
+            modified_dose = modified_dose * self.rng.uniform(
+                1 - self.dose_variability, 1 + self.dose_variability
+            )
+            if self.rng.random() < self.fentanyl_prob:
+                modified_dose = modified_dose * (1 + self.rng.expovariate(1 / 0.25))
 
         return modified_dose
 
     def compute_habit(
         self,
         t: int,
-        conc_multiplier: int = 3,
-        L1: float = 1.02,
+        conc_multiplier: int = 1.85,
+        L1: float = 1.0275,
         L2: float = 0.58,
         K1: float = 0.2,
         K2: float = 0.0002,
@@ -268,28 +307,6 @@ class Simulation:
             x0=self.person.dose * X1,
         )
 
-    def did_person_overdose(self):
-        """
-        Checks whether the most recent opioid effect on the person causes an overdose.
-
-        Based on a random draw and a simple, discrete set of OD probabilities at various
-        effect levels.
-        """
-        effect = self.person.effect[-1]
-
-        if effect > 650:
-            od_prob = 0.5
-        elif effect > 500:
-            od_prob = 0.25
-        elif effect > 350:
-            od_prob = 0.1
-        else:
-            od_prob = 0
-
-        if self.rng.random() < od_prob:
-            # Overdose occurred
-            return True
-
     def compute_concentration_integrals(
         self,
         ALPHA1=0.99,
@@ -321,7 +338,7 @@ class Simulation:
         self.integralD.append(ALPHA4 * self.integralD[-1] + self.integralC[-1] / BETA4)
 
     def compute_threshold(
-        self, B1=0.0001, B2=0.01, B3=0.5,
+        self, B1=0.001, B2=0.01, B3=0.5,
     ):
         """
         Computes the person's threshold to take another dose for the next time step.
