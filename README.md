@@ -25,3 +25,13 @@ Developers wishing to run the app locally can follow these steps:
 1. Activate the virtual environment.
 1. Install dependencies with `pip install -r requirements.txt`.
 1. Run the Streamlit app with `streamlit run streamlit_app.py`
+
+## Dependency management
+This project uses `pip-tools` for dependency management. To add a dependency, follow these steps:
+
+1. Install pip tools in your virtual environment: `pip install pip-tools`
+1. Add the dependency to `requirements.in`
+    - For experiment-specific dependencies, add the dependency to `experiment/requirements.in`
+1. Run `pip-compile` to generate an updated `requirements.txt` based on the updated `requirements.in`
+
+Do not add requirements directly to `requirements.txt`. They will be overwritten the next time someone runs `pip-compile`.
