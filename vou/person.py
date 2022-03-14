@@ -1,11 +1,11 @@
-from vou.utils import logistic
-
-from random import Random
+from collections import deque
 from enum import IntEnum, unique
 from itertools import repeat
-from collections import deque
+from random import Random
 
 import numpy as np
+
+from vou.utils import logistic
 
 
 @unique
@@ -35,6 +35,7 @@ class Person:
     ):
         # Parameters
         self.rng = rng
+        self.starting_dose = starting_dose
         self.dose = starting_dose
         self.dose_increase = dose_increase
         self.threshold = base_threshold
