@@ -27,17 +27,26 @@ The relationship may also be mediated or moderated by several other VOU paramete
 
 ## Scenarios
 
-Can we get some real-world data on which to base the scenarios?     
+The scenarios which make up the experiment are defined in `experiment_params.json` (`IV_Levels`). At each value of `counterfeit_prob` a scenario is created for all combinations of `dose_variability` and `fentanyl_prob`. 
 
-Ideally, we'd get counterfeit pill prevalence and overdose rates for a community. 
+### Other parameters/covariates
 
-E.g.:
-- get a real world data point for counterfeit pill prevalence
-- calibrate the parameters of the experiment to produce the right number of overdoses at that prevalence
-- test scenarios of higher and lower prevalence relative to the baseline
+The other VOU parameters (listed above) are currently set according to the `user_types` defined in `experiment_params.json`. For each combination of `counterfeit_prob`, `dose_variability`, and `fentanyl_prob`, a batch of simulations is run for each user type.
 
-If we can't make this work, we can just use expert opinion from Dan to determine which prevalence values to test.
+This approach was problematic, because the user type overdetermined the likelihood of overdose to the extent that effects of counterfeit pill prevalence were difficult to discern. Future versions of the experiment will incorporate more variability in the other VOU parameters to resolve this issue.
 
-## Calibration
+## Running the experiment
 
-See above - may want to calibrate if we can base scenarios on real-world data.
+1. Create a new virtual environment
+1. Install the VOU package with `pip install -e .`
+1. Install VOU dependencies with `pip install -r requirements.txt`
+1. Install experiment-specific dependencies with `pip install -r experiment/requirements.txt`
+1. Prepare the `scenarios` directory by running `python experiment/prepare.py`
+    - This step creates a directory for each scenario defined in `experiment_params.json`.
+    - Each scenario directory contains a parameters file which will define the batch simulation for that scenario.
+    - Command line arguments can be used to vary the random seed and number of iterations. E.g. `python experiment/prepare.py --seed=123 --n_iterations=10`.
+1. Run the experiment by running `python experiment/run.py`
+    - This step runs a batch experiment for each scenario directory using the list of seeds in `scenarios/seeds.txt`. 
+    - It saves results for each batch in the scenario directories.
+1. Analyze the results with `experiment/analyze.ipynb`
+    - NOTE: `experiment/analyze.py` is currently incomplete.
