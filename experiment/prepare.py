@@ -15,17 +15,80 @@ class Experiment:
         rng: np.random.Generator,
         default_params: Path,
         experiment_params: Path,
+        n_samples: int
+        
     ):
         self.n_iterations = n_iterations
         self.rng = rng
         self.default_params = self.load_json(default_params)
         self.experiment_params = self.load_json(experiment_params)
+        self.n_samples = n_samples
 
         # self.covariate_values = self.draw_covariate_values()
 
     def load_json(self, path: Path):
         with open(path) as f:
             return json.load(f)
+
+    def make_scenario_df(self):
+
+        starting_dose_dist = self.rng.triangular(
+            left=self.experiment_params['covariate_distributions']['triangular']['starting_dose']['left'],
+            right=self.experiment_params['covariate_distributions']['triangular']['starting_dose']['right'],
+            mode=self.experiment_params['covariate_distributions']['triangular']['starting_dose']['mode'],
+            size=self.n_samples
+        ) 
+
+        dose_increase_dist = self.rng.triangular(
+            left=self.experiment_params['covariate_distributions']['triangular']['dose_increase']['left'],
+            right=self.experiment_params['covariate_distributions']['triangular']['dose_increase']['right'],
+            mode=self.experiment_params['covariate_distributions']['triangular']['dose_increase']['mode'],
+            size=self.n_samples
+        ) 
+
+        behavioral_variability_dist = self.rng.triangular(
+            left=self.experiment_params['covariate_distributions']['triangular']['behavioral_variability']['left'],
+            right=self.experiment_params['covariate_distributions']['triangular']['behavioral_variability']['right'],
+            mode=self.experiment_params['covariate_distributions']['triangular']['behavioral_variability']['mode'],
+            size=self.n_samples
+        ) 
+
+        availability_dist = self.rng.triangular(
+            left=self.experiment_params['covariate_distributions']['triangular']['availability']['left'],
+            right=self.experiment_params['covariate_distributions']['triangular']['availability']['right'],
+            mode=self.experiment_params['covariate_distributions']['triangular']['availability']['mode'],
+            size=self.n_samples
+        ) 
+
+        risk_params = self.experiment_params["covariate_distributions"][
+            "multivariate_normal"
+        ]["risk"]
+
+        risk_array = self.rng.multivariate_normal(
+            mean=np.array(risk_params["mean"]),
+            cov=np.array(risk_params["cov"]),
+            size=self.n_samples
+        )
+
+        risk_array = np.where(risk_array < 0, 0, risk_array)
+        risk_array = np.where(risk_array > 1, 1, risk_array)
+
+        covariate_df = pd.DataFrame(
+            {
+                'starting_dose':starting_dose_dist,
+                'dose_increase':dose_increase_dist,
+                'behavioral_variability':behavioral_variability_dist,
+                'availability':availability_dist,
+                'internal_risk':risk_array[:, 1],
+                "external_risk":risk_array[:, 0],
+            }
+        )
+
+        covariate_df['seed'] = [self.rng.integers(1, 2 ** 31 - 1) for _ in range(self.n_samples)]
+
+        covariate_df.to_csv(Path("experiment/param_df.csv"), index=False)
+
+        #return covariate_df
 
     def make_scenario_dirs(self):
         """
@@ -38,35 +101,26 @@ class Experiment:
 
         A final function should loop thru N iterations and transform params in each scenario N times.
         """
+
         for cprob in self.experiment_params["IV_levels"]["counterfeit_prob"]:
             for dvar in self.experiment_params["IV_levels"]["dose_variability"]:
                 for fprob in self.experiment_params["IV_levels"]["fentanyl_prob"]:
-                    for user_type, user_params in self.experiment_params[
-                        "user_types"
-                    ].items():
 
-                        scenario_dir = Path(
-                            f"experiment/scenarios/counterfeit_prob_{cprob}/dose_var_{dvar}_fent_prob_{fprob}/{user_type}"
-                        )
-                        scenario_dir.mkdir(parents=True, exist_ok=True)
+                    scenario_dir = Path(
+                        f"experiment/scenarios/counterfeit_prob_{cprob}/dose_var_{dvar}_fent_prob_{fprob}"
+                    )
+                    scenario_dir.mkdir(parents=True, exist_ok=True)
 
-                        scenario_params = deepcopy(self.default_params)
+                    scenario_params = deepcopy(self.default_params)
 
-                        scenario_params["counterfeit_prob"] = cprob
-                        scenario_params["dose_variability"] = dvar
-                        scenario_params["fentanyl_prob"] = fprob
+                    scenario_params["counterfeit_prob"] = cprob
+                    scenario_params["dose_variability"] = dvar
+                    scenario_params["fentanyl_prob"] = fprob
 
-                        scenario_params["starting_dose"] = user_params["starting_dose"]
-                        scenario_params["dose_increase"] = user_params["dose_increase"]
-                        scenario_params["behavioral_variability"] = user_params[
-                            "behavioral_variability"
-                        ]
-                        scenario_params["availability"] = user_params["availability"]
-                        scenario_params["internal_risk"] = user_params["internal_risk"]
-                        scenario_params["external_risk"] = user_params["external_risk"]
+                    with open(scenario_dir.joinpath("params.json"), "w") as f:
+                        json.dump(scenario_params, f)
 
-                        with open(scenario_dir.joinpath("params.json"), "w") as f:
-                            json.dump(scenario_params, f)
+                    #print(scenario_params)
 
     def draw_covariate_values(self):
         covariate_values = {}
@@ -107,11 +161,12 @@ class Experiment:
                 f.write("\n")
 
     def prepare(self):
+        self.make_scenario_df()
         self.make_scenario_dirs()
-        self.draw_seeds()
+        #self.draw_seeds()
 
 
-def main(seed: int = 1, n_iterations: int = 100):
+def main(seed: int = 1, n_iterations: int = 100, n_samples: int=10):
     rng = np.random.default_rng(seed)
     if Path("experiment/scenarios").exists():
         rmtree(Path("experiment/scenarios"))
@@ -120,6 +175,7 @@ def main(seed: int = 1, n_iterations: int = 100):
         rng=rng,
         default_params=Path("experiment/default_params.json"),
         experiment_params=Path("experiment/experiment_params.json"),
+        n_samples=n_samples,
     )
     experiment.prepare()
 

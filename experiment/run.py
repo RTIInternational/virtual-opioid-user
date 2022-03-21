@@ -47,7 +47,7 @@ def main():
         # print(f"Simulating batch for {dir}")
         batch_sim = BatchSimulation(
             params=Path(d).joinpath("params.json"),
-            seeds=Path("experiment/scenarios/seeds.txt"),
+            distribution_params=Path("experiment/param_df.csv"),
         )
         batch_sim.simulate()
 

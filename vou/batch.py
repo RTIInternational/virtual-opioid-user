@@ -2,6 +2,7 @@ import json
 import multiprocessing
 from pathlib import Path
 from random import Random
+import pandas as pd
 
 from joblib import Parallel, delayed
 
@@ -18,10 +19,9 @@ def load_json(json_file: Path):
 
 
 class BatchSimulation:
-    def __init__(self, params: Path, seeds: Path):
+    def __init__(self, params: Path, distribution_params: Path):
         self.params = load_json(params)
-        with open(seeds) as f:
-            self.seeds = f.read().splitlines()
+        self.dist_params = pd.read_csv(distribution_params)
 
     def simulate(self, parallel: bool = True):
         """
@@ -30,20 +30,20 @@ class BatchSimulation:
         generator, allowing for reproducibility.
         """
 
-        def simulate_one_person(self, seed: int):
+        def simulate_one_person(self, param_dict: dict):
             person = Person(
-                rng=Random(seed),
-                starting_dose=self.params["starting_dose"],
-                dose_increase=self.params["dose_increase"],
-                external_risk=self.params["external_risk"],
-                internal_risk=self.params["internal_risk"],
-                behavioral_variability=self.params["behavioral_variability"],
+                rng=Random(param_dict['seed']),
+                starting_dose=param_dict["starting_dose"], #Could potentially sample from distributions here... or within the prepare.py file
+                dose_increase=param_dict["dose_increase"],
+                external_risk=param_dict["external_risk"],
+                internal_risk=param_dict["internal_risk"],
+                behavioral_variability=param_dict["behavioral_variability"],
             )
             simulation = Simulation(
                 person=person,
-                rng=Random(seed),
-                dose_variability=self.params["dose_variability"],
-                availability=self.params["availability"],
+                rng=Random(param_dict["seed"]),
+                dose_variability=self.params["dose_variability"], 
+                availability=param_dict["availability"],
                 fentanyl_prob=self.params["fentanyl_prob"],
                 counterfeit_prob=self.params["counterfeit_prob"],
             )
@@ -51,12 +51,12 @@ class BatchSimulation:
             return simulation
 
         if parallel is False:
-            self.simulations = [simulate_one_person(self, s) for s in self.seeds]
+            self.simulations = [simulate_one_person(self, dict(row)) for id, row in self.dist_params.iterrows()]
 
         if parallel is True:
             num_cores = multiprocessing.cpu_count()
             self.simulations = Parallel(n_jobs=num_cores)(
-                delayed(simulate_one_person)(self, s) for s in self.seeds
+                delayed(simulate_one_person)(self, dict(row)) for id, row in self.dist_params.iterrows()
             )
 
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         params=Path(
             "experiment/scenarios/counterfeit_prob_0.26/dose_var_0.3_fent_prob_0.25/high/params.json"
         ),
-        seeds=Path("./scenarios/seeds.txt"),
+        distribution_params=Path("experiment/param_df.csv"),
     )
 
     batch_sim.simulate()
