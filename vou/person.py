@@ -235,9 +235,10 @@ class Person:
                 for d in self.took_dose[-effect_window:]
                 if d > self.last_dose_increase
             ]
-            if np.mean(last_n_dose_effects) < (self.dose * increase_threshold):
-                if self.rng.random() > self.downward_pressure:
-                    return True
+            if len(last_n_dose_effects) > 0:
+                if np.mean(last_n_dose_effects) < (self.dose * increase_threshold):
+                    if self.rng.random() > self.downward_pressure:
+                        return True
 
     def increase_dose(self, t: int):
         """
