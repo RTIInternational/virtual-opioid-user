@@ -19,9 +19,9 @@ def load_json(json_file: Path):
 
 
 class BatchSimulation:
-    def __init__(self, params: Path, distribution_params: Path):
+    def __init__(self, params: Path, dynamic_params: Path):
         self.params = load_json(params)
-        self.dist_params = pd.read_csv(distribution_params)
+        self.dist_params = pd.read_csv(dynamic_params)
 
     def simulate(self, parallel: bool = True):
         """
@@ -30,20 +30,23 @@ class BatchSimulation:
         generator, allowing for reproducibility.
         """
 
-        def simulate_one_person(self, param_dict: dict):
+        def simulate_one_person(self, params: dict):
+
+            rng = Random(params["seed"])
+
             person = Person(
-                rng=Random(param_dict['seed']),
-                starting_dose=param_dict["starting_dose"], #Could potentially sample from distributions here... or within the prepare.py file
-                dose_increase=param_dict["dose_increase"],
-                external_risk=param_dict["external_risk"],
-                internal_risk=param_dict["internal_risk"],
-                behavioral_variability=param_dict["behavioral_variability"],
+                rng=rng,
+                starting_dose=params["starting_dose"], #Could potentially sample from distributions here... or within the prepare.py file
+                dose_increase=params["dose_increase"],
+                external_risk=params["external_risk"],
+                internal_risk=params["internal_risk"],
+                behavioral_variability=params["behavioral_variability"],
             )
             simulation = Simulation(
                 person=person,
-                rng=Random(param_dict["seed"]),
+                rng=rng,
                 dose_variability=self.params["dose_variability"], 
-                availability=param_dict["availability"],
+                availability=params["availability"],
                 fentanyl_prob=self.params["fentanyl_prob"],
                 counterfeit_prob=self.params["counterfeit_prob"],
             )

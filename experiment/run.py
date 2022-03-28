@@ -31,7 +31,7 @@ def record_results(batch_sim: BatchSimulation, output_dir: str):
 
     # save as df
     results = {
-        "dose_increase": dose_increases,
+        "overall_dose_increase": dose_increases,
         "overdose_count": overdose_counts,
         "overdose_any": overdose_any,
         "fatal_overdose": fatal_overdose,
@@ -47,7 +47,7 @@ def main():
         # print(f"Simulating batch for {dir}")
         batch_sim = BatchSimulation(
             params=Path(d).joinpath("params.json"),
-            distribution_params=Path("experiment/param_df.csv"),
+            dynamic_params=Path("experiment/param_df.csv"),
         )
         batch_sim.simulate()
 

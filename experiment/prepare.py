@@ -24,13 +24,11 @@ class Experiment:
         self.experiment_params = self.load_json(experiment_params)
         self.n_samples = n_samples
 
-        # self.covariate_values = self.draw_covariate_values()
-
     def load_json(self, path: Path):
         with open(path) as f:
             return json.load(f)
 
-    def make_scenario_df(self):
+    def make_param_df(self):
 
         starting_dose_dist = self.rng.triangular(
             left=self.experiment_params['covariate_distributions']['triangular']['starting_dose']['left'],
@@ -88,8 +86,6 @@ class Experiment:
 
         covariate_df.to_csv(Path("experiment/param_df.csv"), index=False)
 
-        #return covariate_df
-
     def make_scenario_dirs(self):
         """
         Make dir for each scenario following
@@ -120,7 +116,6 @@ class Experiment:
                     with open(scenario_dir.joinpath("params.json"), "w") as f:
                         json.dump(scenario_params, f)
 
-                    #print(scenario_params)
 
     def draw_covariate_values(self):
         covariate_values = {}
@@ -161,9 +156,8 @@ class Experiment:
                 f.write("\n")
 
     def prepare(self):
-        self.make_scenario_df()
+        self.make_param_df()
         self.make_scenario_dirs()
-        #self.draw_seeds()
 
 
 def main(seed: int = 1, n_iterations: int = 100, n_samples: int=10):
