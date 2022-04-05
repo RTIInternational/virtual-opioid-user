@@ -21,7 +21,7 @@ def load_json(json_file: Path):
 class BatchSimulation:
     def __init__(self, params: Path, dynamic_params: Path):
         self.params = load_json(params)
-        self.dist_params = pd.read_csv(dynamic_params)
+        self.dynamic_params = pd.read_csv(dynamic_params)
 
     def simulate(self, parallel: bool = True):
         """
@@ -36,7 +36,9 @@ class BatchSimulation:
 
             person = Person(
                 rng=rng,
-                starting_dose=params["starting_dose"], #Could potentially sample from distributions here... or within the prepare.py file
+                starting_dose=params[
+                    "starting_dose"
+                ],  # Could potentially sample from distributions here... or within the prepare.py file
                 dose_increase=params["dose_increase"],
                 external_risk=params["external_risk"],
                 internal_risk=params["internal_risk"],
@@ -45,7 +47,7 @@ class BatchSimulation:
             simulation = Simulation(
                 person=person,
                 rng=rng,
-                dose_variability=self.params["dose_variability"], 
+                dose_variability=self.params["dose_variability"],
                 availability=params["availability"],
                 fentanyl_prob=self.params["fentanyl_prob"],
                 counterfeit_prob=self.params["counterfeit_prob"],
@@ -54,12 +56,16 @@ class BatchSimulation:
             return simulation
 
         if parallel is False:
-            self.simulations = [simulate_one_person(self, dict(row)) for id, row in self.dist_params.iterrows()]
+            self.simulations = [
+                simulate_one_person(self, dict(row))
+                for id, row in self.dynamic_params.iterrows()
+            ]
 
         if parallel is True:
             num_cores = multiprocessing.cpu_count()
             self.simulations = Parallel(n_jobs=num_cores)(
-                delayed(simulate_one_person)(self, dict(row)) for id, row in self.dist_params.iterrows()
+                delayed(simulate_one_person)(self, dict(row))
+                for id, row in self.dynamic_params.iterrows()
             )
 
 
