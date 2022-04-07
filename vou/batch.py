@@ -1,9 +1,10 @@
 import json
 import multiprocessing
+from copy import deepcopy
 from pathlib import Path
 from random import Random
-import pandas as pd
 
+import pandas as pd
 from joblib import Parallel, delayed
 
 from vou.person import Person
@@ -30,15 +31,50 @@ class BatchSimulation:
         generator, allowing for reproducibility.
         """
 
-        def simulate_one_person(self, params: dict):
+        def combined_static_and_dynamic_params(self, dynamic_param_row: dict):
+            """
+            Combines the static parameters which stay constant across simualtions in the batch
+            with the dynamic parameters from one row of self.dynamic_params. This puts all the
+            parameters for a single simulation into one dictionary.
+            """
+            # Make sure there aren't any params specified as both static and dynamic
+            duplicate_params = [
+                p for p in self.params.keys() if p in dynamic_param_row.keys()
+            ]
+            assert (
+                len(duplicate_params) == 0
+            ), f"The following params are included as both static and dynamic: {duplicate_params}"
+
+            params = deepcopy(self.params)
+            params.update(dynamic_param_row)
+
+            # Make sure we have all the params we need
+            needed_params = [
+                "seed",
+                "starting_dose",
+                "dose_increase",
+                "external_risk",
+                "internal_risk",
+                "behavioral_variability",
+                "dose_variability",
+                "availability",
+                "fentanyl_prob",
+                "counterfeit_prob",
+            ]
+            missing = [p for p in needed_params if p not in params.keys()]
+            assert len(missing) == 0, f"The following params are missing: {missing}"
+
+            return params
+
+        def simulate_one_person(self, dynamic_param_row: dict):
+
+            params = combined_static_and_dynamic_params(self, dynamic_param_row)
 
             rng = Random(params["seed"])
 
             person = Person(
                 rng=rng,
-                starting_dose=params[
-                    "starting_dose"
-                ],  # Could potentially sample from distributions here... or within the prepare.py file
+                starting_dose=params["starting_dose"],
                 dose_increase=params["dose_increase"],
                 external_risk=params["external_risk"],
                 internal_risk=params["internal_risk"],
@@ -47,10 +83,10 @@ class BatchSimulation:
             simulation = Simulation(
                 person=person,
                 rng=rng,
-                dose_variability=self.params["dose_variability"],
+                dose_variability=params["dose_variability"],
                 availability=params["availability"],
-                fentanyl_prob=self.params["fentanyl_prob"],
-                counterfeit_prob=self.params["counterfeit_prob"],
+                fentanyl_prob=params["fentanyl_prob"],
+                counterfeit_prob=params["counterfeit_prob"],
             )
             simulation.simulate()
             return simulation
@@ -72,10 +108,9 @@ class BatchSimulation:
 if __name__ == "__main__":
     batch_sim = BatchSimulation(
         params=Path(
-            "experiment/scenarios/counterfeit_prob_0.26/dose_var_0.3_fent_prob_0.25/high/params.json"
+            "experiment/scenarios/counterfeit_prob_0.13/dose_var_0.1_fent_prob_0.1/params.json"
         ),
-        distribution_params=Path("experiment/param_df.csv"),
+        dynamic_params=Path("experiment/param_df.csv"),
     )
-
     batch_sim.simulate()
 
