@@ -1,8 +1,10 @@
 import json
 import multiprocessing
+from copy import deepcopy
 from pathlib import Path
 from random import Random
 
+import pandas as pd
 from joblib import Parallel, delayed
 
 from vou.person import Person
@@ -18,10 +20,9 @@ def load_json(json_file: Path):
 
 
 class BatchSimulation:
-    def __init__(self, params: Path, seeds: Path):
+    def __init__(self, params: Path, dynamic_params: Path):
         self.params = load_json(params)
-        with open(seeds) as f:
-            self.seeds = f.read().splitlines()
+        self.dynamic_params = pd.read_csv(dynamic_params)
 
     def simulate(self, parallel: bool = True):
         """
@@ -30,43 +31,75 @@ class BatchSimulation:
         generator, allowing for reproducibility.
         """
 
-        def simulate_one_person(self, seed: int):
+        def combined_static_and_dynamic_params(self, dynamic_param_row: dict):
+            """
+            Combines the static parameters which stay constant across simualtions in the batch
+            with the dynamic parameters from one row of self.dynamic_params. This puts all the
+            parameters for a single simulation into one dictionary.
+            """
+            # Make sure there aren't any params specified as both static and dynamic
+            duplicate_params = [
+                p for p in self.params.keys() if p in dynamic_param_row.keys()
+            ]
+            assert (
+                len(duplicate_params) == 0
+            ), f"The following params are included as both static and dynamic: {duplicate_params}"
+
+            params = deepcopy(self.params)
+            params.update(dynamic_param_row)
+
+            # Make sure we have all the params we need
+            needed_params = [
+                "seed",
+                "starting_dose",
+                "dose_increase",
+                "external_risk",
+                "internal_risk",
+                "behavioral_variability",
+                "dose_variability",
+                "availability",
+                "fentanyl_prob",
+                "counterfeit_prob",
+            ]
+            missing = [p for p in needed_params if p not in params.keys()]
+            assert len(missing) == 0, f"The following params are missing: {missing}"
+
+            return params
+
+        def simulate_one_person(self, dynamic_param_row: dict):
+
+            params = combined_static_and_dynamic_params(self, dynamic_param_row)
+
+            rng = Random(params["seed"])
+
             person = Person(
-                rng=Random(seed),
-                starting_dose=self.params["starting_dose"],
-                dose_increase=self.params["dose_increase"],
-                external_risk=self.params["external_risk"],
-                internal_risk=self.params["internal_risk"],
-                behavioral_variability=self.params["behavioral_variability"],
+                rng=rng,
+                starting_dose=params["starting_dose"],
+                dose_increase=params["dose_increase"],
+                external_risk=params["external_risk"],
+                internal_risk=params["internal_risk"],
+                behavioral_variability=params["behavioral_variability"],
             )
             simulation = Simulation(
                 person=person,
-                rng=Random(seed),
-                dose_variability=self.params["dose_variability"],
-                availability=self.params["availability"],
-                fentanyl_prob=self.params["fentanyl_prob"],
-                counterfeit_prob=self.params["counterfeit_prob"],
+                rng=rng,
+                dose_variability=params["dose_variability"],
+                availability=params["availability"],
+                fentanyl_prob=params["fentanyl_prob"],
+                counterfeit_prob=params["counterfeit_prob"],
             )
             simulation.simulate()
             return simulation
 
         if parallel is False:
-            self.simulations = [simulate_one_person(self, s) for s in self.seeds]
+            self.simulations = [
+                simulate_one_person(self, dict(row))
+                for id, row in self.dynamic_params.iterrows()
+            ]
 
         if parallel is True:
             num_cores = multiprocessing.cpu_count()
             self.simulations = Parallel(n_jobs=num_cores)(
-                delayed(simulate_one_person)(self, s) for s in self.seeds
+                delayed(simulate_one_person)(self, dict(row))
+                for id, row in self.dynamic_params.iterrows()
             )
-
-
-if __name__ == "__main__":
-    batch_sim = BatchSimulation(
-        params=Path(
-            "experiment/scenarios/counterfeit_prob_0.26/dose_var_0.3_fent_prob_0.25/high/params.json"
-        ),
-        seeds=Path("./scenarios/seeds.txt"),
-    )
-
-    batch_sim.simulate()
-
