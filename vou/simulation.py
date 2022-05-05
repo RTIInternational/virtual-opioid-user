@@ -1,13 +1,10 @@
-from vou.person import Person, BehaviorWhenResumingUse, OverdoseType
-from vou.utils import logistic
-
-
 import math
 from random import Random
-from itertools import repeat
-from copy import copy
 
 import numpy as np
+
+from vou.person import BehaviorWhenResumingUse, OverdoseType, Person
+from vou.utils import logistic
 
 
 class Simulation:
