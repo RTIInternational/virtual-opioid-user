@@ -107,43 +107,51 @@ class Simulation:
             # Finally, update the person's threshold for the next iteration
             self.person.threshold = self.compute_threshold()
 
-    def compute_concentration(
-        self, k: float = 0.0594,
-    ):
+    def compute_concentration(self, ke: float = 0.0594, ka: float = 5):
         """
         Computes the person's concentration of opioids in MME at a time step.
-        A is a calibrated parameter.
 
-        This pharmacokinetic decay function was calibrated to the half life of morphine.
+        The coefficient of elimination (Ke) was calibrated to the half life of morphine.
         Per Lotsch 2005, 3 studies identifed this value as 2.8 hours, which we use here.
 
         This model uses 100 time steps per day, so each time step equates to
         24 * 60 / 100 = 14.4 minutes. The half life in model time units is 
         2.8 * 60 / 14.4 = 11.667 time units.
 
-        For first-order decay functions, the decay constant k = ln(2) / half_life.
+        For first-order decay functions, the decay constant Ke = ln(2) / half_life.
         Therefore, in our case:
 
-        k = ln(2) / 11.667 = 0.0594
-        """
-        return (self.conc_when_dose_taken + self.last_amount_taken) * math.exp(
-            -k * self.time_since_dose
-        )
+        Ke = ln(2) / 11.667 = 0.0594
 
-    def compute_effect(
-        self, k: float = 0.0594,
-    ):
+        The coefficient of absorption (Ka) can be varied to simulate different modes
+        of opioid administration. The default value is high enough that the entire dose
+        is absorbed by the following time step, simulating an injection (or any mode of
+        administration where the entire dose is absorbed within ~15 minutes). Reducing
+        Ka can simulate orally consuming pills, where it takes several time steps for the
+        dose to be absorbed. See `notebooks/pk_absorb_eliminate.ipynb` for details.
+        """
+        D = self.conc_when_dose_taken + self.last_amount_taken
+        t = self.time_since_dose
+
+        C = ((D * ka) / (ka - ke)) * ((math.exp(-ke * t)) - (math.exp(-ka * t)))
+
+        return C
+
+    def compute_effect(self, ke: float = 0.0594, ka: float = 5):
         """
         Computes opioid's effect on the the person at a time step, given their
         concentration of opioid and opioid use habit.
         
-        k is a calibrated parameter. See docstring for compute_concentration for details.
+        Ka is a calibrated parameter and Ke can be adjusted to simualte different modes of
+        administration. See docstring for compute_concentration for details. The same value
+        of Ke should always be used for compute_concentration and compute_effect.
         """
-        return max(
-            (self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1])
-            * math.exp(-k * self.time_since_dose),
-            0,
-        )
+        D = self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
+        t = self.time_since_dose
+
+        C = ((D * ka) / (ka - ke)) * ((math.exp(-ke * t)) - (math.exp(-ka * t)))
+
+        return max(C, 0)
 
     def update_availability(self, t: int):
         """
