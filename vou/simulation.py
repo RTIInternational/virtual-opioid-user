@@ -96,12 +96,12 @@ class Simulation:
                 self.person.effect_record[t] = self.person.effect[-1]
                 # Check if the person will increase their dose.
 
-                dose_increase = self.person.will_increase_dose(t=t)
+                dose_increase = self.person.will_increase_dose()
                 
                 if dose_increase['success']:
                     self.person.increase_dose(t)
                     
-                self.person.dose_increase_record[str(t)] = dose_increase
+                self.person.dose_increase_record[t] = dose_increase
 
             # Compute the person's threshold and desperation
             # First, compute integrals of concentration to be used in calculating
@@ -382,6 +382,7 @@ class Simulation:
             ),
             0,
         )
+
 
 if __name__ == "__main__":
     person = Person(rng=Random(1),)
