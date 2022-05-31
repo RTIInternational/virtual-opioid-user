@@ -5,7 +5,7 @@ from random import Random
 
 import numpy as np
 
-from vou.utils import logistic
+from vou.utils import load_json, logistic
 
 
 @unique
@@ -19,7 +19,8 @@ class OverdoseType(IntEnum):
     NON_FATAL = 0
     FATAL = 1
 
-@unique 
+
+@unique
 class DoseIncreaseSource(IntEnum):
     PRIMARY_DOCTOR = 0
     SECONDARY_DOCTOR = 1
@@ -231,8 +232,6 @@ class Person:
         else:
             return dose_reduction
 
-   
-
     def will_increase_dose(
         self, effect_window: int = 20, increase_threshold: float = 0.4,
     ):
@@ -247,62 +246,73 @@ class Person:
         this is their second time, they will have a 50% chance of trying through a secondary
         doctor or a dealer.
         """
-        self.source_probability_primary = self.drug_params['source_probability']['initial_doctor_increase']
-        self.source_probability_secondary = self.drug_params['source_probability']['secondary_doctor']
-        self.source_probability_dealer = self.drug_params['source_probability']['dealer']
-        self.secondary_doc_dealer_prob = self.drug_params['secondary_doc_dealer_prob']
-        
+        self.source_probability_primary = self.drug_params["source_probability"][
+            "initial_doctor_increase"
+        ]
+        self.source_probability_secondary = self.drug_params["source_probability"][
+            "secondary_doctor"
+        ]
+        self.source_probability_dealer = self.drug_params["source_probability"][
+            "dealer"
+        ]
+        self.secondary_doc_dealer_prob = self.drug_params["secondary_doc_dealer_prob"]
+
         if len(list(self.dose_increase_record.values())) == 0:
             last_attempt_src = DoseIncreaseSource.FIRST_ATTEMPT
             last_attempt_success = None
 
         else:
-            last_attempt_src = list(self.dose_increase_record.values())[-1]['source']
-            last_attempt_success = list(self.dose_increase_record.values())[-1]['success']
+            last_attempt_src = list(self.dose_increase_record.values())[-1]["source"]
+            last_attempt_success = list(self.dose_increase_record.values())[-1][
+                "success"
+            ]
 
         if self.dose < 2_000:
-            
+
             last_n_dose_effects = [
                 self.effect_record[d]
                 for d in self.took_dose[-effect_window:]
                 if d > self.last_dose_increase
             ]
             if len(last_n_dose_effects) > 0:
-                
+
                 if np.mean(last_n_dose_effects) < (self.dose * increase_threshold):
-                    
+
                     if self.rng.random() > self.downward_pressure:
-                        
+
                         will_increase_dose = True
                     else:
-                        
+
                         will_increase_dose = False
                         increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
                 else:
-                    
+
                     will_increase_dose = False
-                    increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE 
+                    increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
             else:
-                
+
                 will_increase_dose = False
                 increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
 
         else:
-            
+
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-            
+
         if will_increase_dose == True:
 
             # Need to create dictionary of if will_increase_dose is true, record how to increase
 
             # if first time trying to increase dose, go to primary doctor for potential increase
             ## Also, if the last attempt to increase from primary was successful, try again with primary
-            if (len(self.dose_increase_record) == 0) | ((last_attempt_src == DoseIncreaseSource.PRIMARY_DOCTOR) & (last_attempt_success == True)):
+            if (len(self.dose_increase_record) == 0) | (
+                (last_attempt_src == DoseIncreaseSource.PRIMARY_DOCTOR)
+                & (last_attempt_success == True)
+            ):
 
                 # probability of primary doctor increasing
                 if self.rng.random() <= self.source_probability_primary:
-                    will_increase_dose = True 
+                    will_increase_dose = True
                     increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
                 else:
@@ -313,7 +323,9 @@ class Person:
             ### Actually, removing primary condition -- if you tried and failed at all in the last attempt, you'll have the two below choices of
             ### dealer/secondary
             ##### If your last increase attempt was successful, but it was a secondary doctor, you'll enter this situation again
-            elif (last_attempt_success == False) | (last_attempt_src == DoseIncreaseSource.SECONDARY_DOCTOR):
+            elif (last_attempt_success == False) | (
+                last_attempt_src == DoseIncreaseSource.SECONDARY_DOCTOR
+            ):
 
                 # _____ This may not be right
                 # 50% probability they will go to either dealer or secondary doctor
@@ -321,11 +333,11 @@ class Person:
                 if self.rng.random() <= self.secondary_doc_dealer_prob:
 
                     if self.rng.random() <= self.source_probability_secondary:
-                        will_increase_dose = True 
+                        will_increase_dose = True
                         increase_dose_src = DoseIncreaseSource.SECONDARY_DOCTOR
 
                     else:
-                        will_increase_dose = False 
+                        will_increase_dose = False
                         increase_dose_src = DoseIncreaseSource.SECONDARY_DOCTOR
 
                 else:
@@ -335,18 +347,15 @@ class Person:
                         increase_dose_src = DoseIncreaseSource.DEALER
 
                     else:
-                        will_increase_dose = True 
+                        will_increase_dose = True
                         increase_dose_src = DoseIncreaseSource.DEALER
 
-            else: # only other option is you successfuly found a dealer, in which case you can always increase
+            else:  # only other option is you successfuly found a dealer, in which case you can always increase
 
-                will_increase_dose = True 
+                will_increase_dose = True
                 increase_dose_src = DoseIncreaseSource.DEALER
 
-        return {
-            "source":increase_dose_src,
-            "success":will_increase_dose
-        }
+        return {"source": increase_dose_src, "success": will_increase_dose}
 
     def increase_dose(self, t: int):
         """
