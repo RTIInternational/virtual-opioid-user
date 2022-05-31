@@ -267,52 +267,17 @@ class Person:
                 "success"
             ]
 
-<<<<<<< HEAD
-        if self.dose < 2_000:
-
-            last_n_dose_effects = [
-=======
         last_n_dose_effects = [
->>>>>>> ad5593e (Adjusted person.py script based on pr#27 comments)
                 self.effect_record[d]
                 for d in self.took_dose[-effect_window:]
                 if d > self.last_dose_increase
             ]
-<<<<<<< HEAD
-            if len(last_n_dose_effects) > 0:
-
-                if np.mean(last_n_dose_effects) < (self.dose * increase_threshold):
-
-                    if self.rng.random() > self.downward_pressure:
-
-                        will_increase_dose = True
-                    else:
-
-                        will_increase_dose = False
-                        increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-                else:
-
-                    will_increase_dose = False
-                    increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-            else:
-
-                will_increase_dose = False
-                increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-
-        else:
-
-            will_increase_dose = False
-            increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-
-        if will_increase_dose == True:
-=======
 
         # Check if individual will increase dose
         if self.dose < 2_000:
             
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
->>>>>>> ad5593e (Adjusted person.py script based on pr#27 comments)
 
         elif len(last_n_dose_effects) == 0:
 
