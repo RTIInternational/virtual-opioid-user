@@ -267,13 +267,18 @@ class Person:
                 "success"
             ]
 
+<<<<<<< HEAD
         if self.dose < 2_000:
 
             last_n_dose_effects = [
+=======
+        last_n_dose_effects = [
+>>>>>>> ad5593e (Adjusted person.py script based on pr#27 comments)
                 self.effect_record[d]
                 for d in self.took_dose[-effect_window:]
                 if d > self.last_dose_increase
             ]
+<<<<<<< HEAD
             if len(last_n_dose_effects) > 0:
 
                 if np.mean(last_n_dose_effects) < (self.dose * increase_threshold):
@@ -300,8 +305,34 @@ class Person:
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
 
         if will_increase_dose == True:
+=======
 
-            # Need to create dictionary of if will_increase_dose is true, record how to increase
+        # Check if individual will increase dose
+        if self.dose < 2_000:
+            
+            will_increase_dose = False
+            increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
+>>>>>>> ad5593e (Adjusted person.py script based on pr#27 comments)
+
+        elif len(last_n_dose_effects) == 0:
+
+            will_increase_dose = False
+            increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
+                
+        elif np.mean(last_n_dose_effects) >= (self.dose * increase_threshold):
+
+            will_increase_dose = False
+            increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
+                
+        elif self.rng.random() <= self.downward_pressure:
+            
+            will_increase_dose = False
+            increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
+        else:
+            will_increase_dose = True
+            
+        # Determine source of dose increase
+        if will_increase_dose == True:
 
             # if first time trying to increase dose, go to primary doctor for potential increase
             ## Also, if the last attempt to increase from primary was successful, try again with primary
@@ -320,15 +351,11 @@ class Person:
                     increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
             # if the last time they tried to increase, they tried from their primary and failed, try from either dealer or secondary doctor
-            ### Actually, removing primary condition -- if you tried and failed at all in the last attempt, you'll have the two below choices of
-            ### dealer/secondary
+            
             ##### If your last increase attempt was successful, but it was a secondary doctor, you'll enter this situation again
             elif (last_attempt_success == False) | (
                 last_attempt_src == DoseIncreaseSource.SECONDARY_DOCTOR
             ):
-
-                # _____ This may not be right
-                # 50% probability they will go to either dealer or secondary doctor
 
                 if self.rng.random() <= self.secondary_doc_dealer_prob:
 
