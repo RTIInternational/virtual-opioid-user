@@ -118,5 +118,11 @@
             "heroin":0.2,
             "fentanyl":0.1
         }
-    }
+    },
+    "source_probability":{
+        "initial_doctor_increase":0.3,
+        "secondary_doctor":0.5,
+        "dealer":0.8
+    },
+    "secondary_doc_dealer_prob":0.5
 }

@@ -9,14 +9,7 @@ from joblib import Parallel, delayed
 
 from vou.person import Person
 from vou.simulation import Simulation
-
-
-def load_json(json_file: Path):
-    """
-    Loads a JSON file to a JSON object
-    """
-    with open(json_file) as f:
-        return json.load(f)
+from vou.utils import load_json
 
 
 class BatchSimulation:
