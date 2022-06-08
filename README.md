@@ -18,6 +18,9 @@
 ## Running the model
 App users can [run the app on Streamlit Sharing](https://share.streamlit.io/rtiinternational/virtual-opioid-user/main). 
 
+## Development
+
+### Creating a virtual environment and running the app locally
 Developers wishing to run the app locally can follow these steps:
 
 1. Clone this repository to your local machine.
@@ -25,8 +28,7 @@ Developers wishing to run the app locally can follow these steps:
 1. Activate the virtual environment.
 1. Install dependencies with `pip install -r requirements.txt`.
 1. Run the Streamlit app with `streamlit run streamlit_app.py`
-
-## Dependency management
+### Dependency management
 This project uses `pip-tools` for dependency management. To add a dependency, follow these steps:
 
 1. Install pip tools in your virtual environment: `pip install pip-tools`
@@ -35,3 +37,23 @@ This project uses `pip-tools` for dependency management. To add a dependency, fo
 1. Run `pip-compile` to generate an updated `requirements.txt` based on the updated `requirements.in`
 
 Do not add requirements directly to `requirements.txt`. They will be overwritten the next time someone runs `pip-compile`.
+
+### Auto-formatting and import sorting
+To maintain consistency and limit code changes due to formatting differences, this project uses auto-formatting and import sorting.
+
+We use `black` for auto-formatting and VS code's `organizeImports` for import sorting.
+
+To enable these, create a `.vscode` directory at the repo's root and create the file `.vscode/settings.json` with the following contents:
+```
+{
+    "python.defaultInterpreterPath": "path/to/virtual/env/created/above",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    }
+}
+```
+**If you're using a different IDE,** these steps will be different, but auto-formatting with `black` and import sorting should still be enabled.
