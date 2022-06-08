@@ -41,7 +41,7 @@ Do not add requirements directly to `requirements.txt`. They will be overwritten
 ### Auto-formatting and import sorting
 To maintain consistency and limit code changes due to formatting differences, this project uses auto-formatting and import sorting.
 
-We use `black` for auto-formatting and VS code's `organizeImports` for import sorting.
+We use `black` for auto-formatting and VS code's `organizeImports` for import sorting. We use all default arguments for `black` (i.e., don't specify a different line length, etc.)
 
 To enable these, create a `.vscode` directory at the repo's root and create the file `.vscode/settings.json` with the following contents:
 ```
