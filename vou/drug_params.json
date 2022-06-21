@@ -79,14 +79,14 @@
             "Pill":0.1
         },
         "fentanyl":{
-            "Injection":0.2,
+            "Injection":0.3,
             "Insufflation":0.2,
             "Smoking":0.3,
             "Pill":0.2
         }
     },
     "drugs_by_source":{
-        "secondary_doctor":{
+        "DoseIncreaseSource.PRIMARY_DOCTOR":{
             "codeine": 0.083,
             "dihydrocodeine": 0.083,
             "hydrocodone": 0.083,
@@ -94,7 +94,7 @@
             "levorphanol_tartrate": 0.083,
             "meperidine_hcl": 0.083,
             "morphine": 0.083,
-            "oxycodone": 0.083,
+            "oxycodone": 0.084,
             "oxymorphone": 0.083,
             "pentazocine": 0.083,
             "tapentadol": 0.083,
@@ -102,7 +102,23 @@
             "heroin":0.0,
             "fentanyl":0.0
         },
-        "dealer":{
+        "DoseIncreaseSource.SECONDARY_DOCTOR":{
+            "codeine": 0.083,
+            "dihydrocodeine": 0.083,
+            "hydrocodone": 0.083,
+            "hydromorphone": 0.083,
+            "levorphanol_tartrate": 0.083,
+            "meperidine_hcl": 0.083,
+            "morphine": 0.083,
+            "oxycodone": 0.084,
+            "oxymorphone": 0.083,
+            "pentazocine": 0.083,
+            "tapentadol": 0.083,
+            "tramadol": 0.083,
+            "heroin":0.0,
+            "fentanyl":0.0
+        },
+        "DoseIncreaseSource.DEALER":{
             "codeine": 0.1,
             "dihydrocodeine": 0.1,
             "hydrocodone": 0.1,

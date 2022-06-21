@@ -5,8 +5,7 @@ from random import Random
 
 import numpy as np
 
-from vou.utils import load_json, logistic
-
+from vou.utils import load_json, logistic, weighted_random_by_dct
 
 @unique
 class BehaviorWhenResumingUse(IntEnum):
@@ -258,7 +257,7 @@ class Person:
         self.secondary_doc_dealer_prob = self.drug_params["secondary_doc_dealer_prob"]
 
         if len(list(self.dose_increase_record.values())) == 0:
-            last_attempt_src = DoseIncreaseSource.FIRST_ATTEMPT
+            last_attempt_src = DoseIncreaseSource.PRIMARY_DOCTOR
             last_attempt_success = None
 
         else:
@@ -272,9 +271,9 @@ class Person:
                 for d in self.took_dose[-effect_window:]
                 if d > self.last_dose_increase
             ]
-
+            
         # Check if individual will increase dose
-        if self.dose < 2_000:
+        if self.dose >= 2_000:
             
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
@@ -347,7 +346,22 @@ class Person:
                 will_increase_dose = True
                 increase_dose_src = DoseIncreaseSource.DEALER
 
-        return {"source": increase_dose_src, "success": will_increase_dose}
+        ### TODO: Add dose type to dictionary so it doesn't change during record_dose (method of use will change each time?)
+        ##### Need to deal with will-not-increase source
+
+        ##### Need to make dose_type consistent --unless increasing dose, use the last type of dose
+
+        if (increase_dose_src == DoseIncreaseSource.WILL_NOT_INCREASE) & (len(list(self.dose_increase_record.values())) > 0):
+            dose_dictionary = list(self.dose_increase_record.values())
+            source_list = [x for x in dose_dictionary if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE]
+            increase_dose_src = source_list[-1]['source']
+
+        if (len(list(self.dose_increase_record.values())) == 0): # if it's first timestep
+            increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
+
+        increase_dose_type = weighted_random_by_dct(self.drug_params['drugs_by_source'][str(increase_dose_src)])
+        
+        return {"source": increase_dose_src, "success": will_increase_dose, "dose_type":increase_dose_type}
 
     def increase_dose(self, t: int):
         """

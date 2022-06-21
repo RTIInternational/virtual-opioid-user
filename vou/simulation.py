@@ -2,10 +2,20 @@ import math
 from random import Random
 
 import numpy as np
+import pandas as pd
+
+from enum import IntEnum, unique
 
 from vou.person import BehaviorWhenResumingUse, OverdoseType, Person
-from vou.utils import logistic
+from vou.utils import logistic, weighted_random_by_dct
 
+@unique
+class DoseIncreaseSource(IntEnum):
+    PRIMARY_DOCTOR = 0
+    SECONDARY_DOCTOR = 1
+    DEALER = 2
+    WILL_NOT_INCREASE = 3
+    FIRST_ATTEMPT = 4
 
 class Simulation:
     def __init__(
@@ -102,7 +112,7 @@ class Simulation:
                     self.person.increase_dose(t)
                     
                 self.person.dose_increase_record[t] = dose_increase
-
+                # print(self.person.dose_increase_record)
             # Compute the person's threshold and desperation
             # First, compute integrals of concentration to be used in calculating
             # threshold and desperation
@@ -193,7 +203,41 @@ class Simulation:
     def record_dose_taken(self, t):
         """
         Takes the necessary actions when the person has taken a dose.
+
+        Increase record is used to update the dose source, type, and method
+        * If this is the first timestep, go with Primary and a random drug from that distribution
+        * If not, go with the last specified dose type and source --specified from will_increase_dose
+            * This will cause the type of dose to change each time increase is True
+        * Method of use will change each time a dose is taken based on the probabilities associated
+            with drug type
         """
+
+        # create dataframe of dose increases to determine last source
+        ## Currently using option 1 - last source is the continued source
+        if len(list(self.person.dose_increase_record.items())) > 0:
+            record_df = pd.DataFrame(self.person.dose_increase_record).T
+
+        ### Filter to the last entry where the source was not "WILL NOT INCREASE" and the attempt to increase was a success
+        ##### If that does not exist then the source/etc. will be based on primary
+            record_df = record_df[(record_df['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (record_df['success'] == True)]
+            record_df = record_df.tail(1)
+
+            # Determine source
+            if record_df.shape[0] == 0: # if first record --primary
+                self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
+                self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
+
+            else:
+                self.dose_source = record_df['source'].iloc[0]
+                self.dose_type = record_df['dose_type'].iloc[0]
+
+        else: # if it's the first timestamp go to primary
+            self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
+            self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
+        print(self.dose_type)
+        # Determine the method of use based on the drug
+        self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type])
+
         # Update the dose taken indicator, which will cue additional actions later
         # in the time step.
         self.dose_taken_at_t = True
@@ -382,7 +426,6 @@ class Simulation:
             ),
             0,
         )
-
 
 if __name__ == "__main__":
     person = Person(rng=Random(1),)

@@ -144,6 +144,5 @@ cython_debug/
 # Moving experiments as it was added to another repo
 experiments/*
 
-# Removing testing notebook that was used for expanding classes
-test_notebook.ipynb 
+
 
