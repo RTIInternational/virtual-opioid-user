@@ -215,21 +215,20 @@ class Simulation:
         # create dataframe of dose increases to determine last source
         ## Currently using option 1 - last source is the continued source
         if len(list(self.person.dose_increase_record.items())) > 0:
-            record_df = pd.DataFrame(self.person.dose_increase_record).T
+            dose_dictionary = list(self.person.dose_increase_record.values())
 
         ### Filter to the last entry where the source was not "WILL NOT INCREASE" and the attempt to increase was a success
         ##### If that does not exist then the source/etc. will be based on primary
-            record_df = record_df[(record_df['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (record_df['success'] == True)]
-            record_df = record_df.tail(1)
+            last_source = [x for x in dose_dictionary if (x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (x['success'] == True)]
 
             # Determine source
-            if record_df.shape[0] == 0: # if first record --primary
+            if len(last_source) == 0: # if first record --primary
                 self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
                 self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
 
             else:
-                self.dose_source = record_df['source'].iloc[0]
-                self.dose_type = record_df['dose_type'].iloc[0]
+                self.dose_source = last_source[-1]['source']
+                self.dose_type = last_source[-1]['dose_type']
 
         else: # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
