@@ -206,17 +206,17 @@ class Simulation:
 
         # create dataframe of dose increases to determine last source
         ## Currently using option 1 - last source is the continued source
-        if len(list(self.person.dose_increase_record.items())) > 0:
-            dose_dictionary = list(self.person.dose_increase_record.values())
+        if len(self.person.dose_increase_record) > 0:
 
-        ### Filter to the last entry where the source was not "WILL NOT INCREASE" and the attempt to increase was a success
-        ##### If that does not exist then the source/etc. will be based on primary
-            last_source = [x for x in dose_dictionary if (x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (x['success'] == True)]
+            ### Filter to the last entry where the source was not "WILL NOT INCREASE" and the attempt to increase was a success
+            ##### If that does not exist then the source/etc. will be based on primary
+            last_source = [x for x in list(self.person.dose_increase_record.values()) 
+                            if (x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (x['success'] == True)]
 
             # Determine source
             if len(last_source) == 0: # if first record --primary
                 self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
-                self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
+                self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng.random())
 
             else:
                 self.dose_source = last_source[-1]['source']
@@ -224,10 +224,10 @@ class Simulation:
 
         else: # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
-            self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
+            self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng.random())
         
         # Determine the method of use based on the drug
-        self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type])
+        self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type], self.rng.random())
 
         # Update the dose taken indicator, which will cue additional actions later
         # in the time step.
