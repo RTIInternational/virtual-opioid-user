@@ -346,13 +346,13 @@ class Person:
                 will_increase_dose = True
                 increase_dose_src = DoseIncreaseSource.DEALER
 
-        if (len(list(self.dose_increase_record.values())) > 0):
-            increase_dose_src = [x for x in list(self.dose_increase_record.values()) if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE][-1]['source']
-
+        
         if (len(list(self.dose_increase_record.values())) == 0): # if it's first timestep
             increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
+        else:
+            increase_dose_src = [x for x in list(self.dose_increase_record.values()) if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE][-1]['source']
 
-        increase_dose_type = weighted_random_by_dct(self.drug_params['drugs_by_source'][str(increase_dose_src)], self.rng.random())
+        increase_dose_type = weighted_random_by_dct(self.drug_params['drugs_by_source'][str(increase_dose_src)], self.rng)
         
         return {"source": increase_dose_src, "success": will_increase_dose, "dose_type":increase_dose_type}
 

@@ -216,7 +216,7 @@ class Simulation:
             # Determine source
             if len(last_source) == 0: # if first record --primary
                 self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
-                self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng.random())
+                self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng)
 
             else:
                 self.dose_source = last_source[-1]['source']
@@ -224,10 +224,10 @@ class Simulation:
 
         else: # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
-            self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng.random())
+            self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng)
         
         # Determine the method of use based on the drug
-        self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type], self.rng.random())
+        self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type], self.rng)
 
         # Update the dose taken indicator, which will cue additional actions later
         # in the time step.

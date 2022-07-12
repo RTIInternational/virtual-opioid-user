@@ -24,8 +24,8 @@ def load_json(json_file: Path):
     with open(json_file) as f:
         return json.load(f)
 
-def weighted_random_by_dct(dct, sim_rng):
-    rand_val = sim_rng
+def weighted_random_by_dct(dct, rng:random.Random):
+    rand_val = rng.random()
     total = 0
     for k, v in dct.items():
         total += v 
