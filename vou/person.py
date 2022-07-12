@@ -346,12 +346,7 @@ class Person:
                 will_increase_dose = True
                 increase_dose_src = DoseIncreaseSource.DEALER
 
-        ### TODO: Add dose type to dictionary so it doesn't change during record_dose (method of use will change each time?)
-        ##### Need to deal with will-not-increase source
-
-        ##### Need to make dose_type consistent --unless increasing dose, use the last type of dose
-
-        if (increase_dose_src == DoseIncreaseSource.WILL_NOT_INCREASE) & (len(list(self.dose_increase_record.values())) > 0):
+        if (len(list(self.dose_increase_record.values())) > 0):
             dose_dictionary = list(self.dose_increase_record.values())
             source_list = [x for x in dose_dictionary if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE]
             increase_dose_src = source_list[-1]['source']

@@ -6,16 +6,8 @@ import pandas as pd
 
 from enum import IntEnum, unique
 
-from vou.person import BehaviorWhenResumingUse, OverdoseType, Person
+from vou.person import BehaviorWhenResumingUse, OverdoseType, Person, DoseIncreaseSource
 from vou.utils import logistic, weighted_random_by_dct
-
-@unique
-class DoseIncreaseSource(IntEnum):
-    PRIMARY_DOCTOR = 0
-    SECONDARY_DOCTOR = 1
-    DEALER = 2
-    WILL_NOT_INCREASE = 3
-    FIRST_ATTEMPT = 4
 
 class Simulation:
     def __init__(
@@ -112,7 +104,7 @@ class Simulation:
                     self.person.increase_dose(t)
                     
                 self.person.dose_increase_record[t] = dose_increase
-                # print(self.person.dose_increase_record)
+                
             # Compute the person's threshold and desperation
             # First, compute integrals of concentration to be used in calculating
             # threshold and desperation
@@ -233,7 +225,7 @@ class Simulation:
         else: # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
             self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)])
-        print(self.dose_type)
+        
         # Determine the method of use based on the drug
         self.dose_method = weighted_random_by_dct(self.person.drug_params['admin_mode_distributions'][self.dose_type])
 
