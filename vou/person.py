@@ -347,7 +347,7 @@ class Person:
                 increase_dose_src = DoseIncreaseSource.DEALER
 
         # If first timestep then source is primary doctor
-        if (len(list(self.dose_increase_record.values())) == 0): # if it's first timestep
+        if (len(self.dose_increase_record) == 0): # if it's first timestep
             increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
         # if not first timestep then source is the last source that doesn't equal WILL_NOT_INCREASE
