@@ -7,6 +7,7 @@ import numpy as np
 
 from vou.utils import load_json, logistic, weighted_random_by_dct
 
+
 @unique
 class BehaviorWhenResumingUse(IntEnum):
     SAME_DOSE = 0
@@ -267,14 +268,14 @@ class Person:
             ]
 
         last_n_dose_effects = [
-                self.effect_record[d]
-                for d in self.took_dose[-effect_window:]
-                if d > self.last_dose_increase
-            ]
-            
+            self.effect_record[d]
+            for d in self.took_dose[-effect_window:]
+            if d > self.last_dose_increase
+        ]
+
         # Check if individual will increase dose
         if self.dose >= 2_000:
-            
+
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
 
@@ -282,19 +283,19 @@ class Person:
 
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-                
+
         elif np.mean(last_n_dose_effects) >= (self.dose * increase_threshold):
 
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
-                
+
         elif self.rng.random() <= self.downward_pressure:
-            
+
             will_increase_dose = False
             increase_dose_src = DoseIncreaseSource.WILL_NOT_INCREASE
         else:
             will_increase_dose = True
-            
+
         # Determine source of dose increase
         if will_increase_dose == True:
 
@@ -315,7 +316,7 @@ class Person:
                     increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
             # if the last time they tried to increase, they tried from their primary and failed, try from either dealer or secondary doctor
-            
+
             ##### If your last increase attempt was successful, but it was a secondary doctor, you'll enter this situation again
             elif (last_attempt_success == False) | (
                 last_attempt_src == DoseIncreaseSource.SECONDARY_DOCTOR
@@ -347,17 +348,27 @@ class Person:
                 increase_dose_src = DoseIncreaseSource.DEALER
 
         # If first timestep then source is primary doctor
-        if (len(self.dose_increase_record) == 0): # if it's first timestep
+        if len(self.dose_increase_record) == 0:  # if it's first timestep
             increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
         # if not first timestep then source is the last source that doesn't equal WILL_NOT_INCREASE
-        elif (increase_dose_src == DoseIncreaseSource.WILL_NOT_INCREASE):
-            increase_dose_src = [x for x in list(self.dose_increase_record.values()) if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE][-1]['source']
+        elif increase_dose_src == DoseIncreaseSource.WILL_NOT_INCREASE:
+            increase_dose_src = [
+                x
+                for x in list(self.dose_increase_record.values())
+                if x["source"] != DoseIncreaseSource.WILL_NOT_INCREASE
+            ][-1]["source"]
 
         # Dose type based on dose source
-        increase_dose_type = weighted_random_by_dct(self.drug_params['drugs_by_source'][str(increase_dose_src)], self.rng)
-        
-        return {"source": increase_dose_src, "success": will_increase_dose, "dose_type":increase_dose_type}
+        increase_dose_type = weighted_random_by_dct(
+            self.drug_params["drugs_by_source"][str(increase_dose_src)], self.rng
+        )
+
+        return {
+            "source": increase_dose_src,
+            "success": will_increase_dose,
+            "dose_type": increase_dose_type,
+        }
 
     def increase_dose(self, t: int):
         """
