@@ -210,17 +210,17 @@ class Simulation:
 
             ### Filter to the last entry where the source was not "WILL NOT INCREASE" and the attempt to increase was a success
             ##### If that does not exist then the source/etc. will be based on primary
-            last_source = [x for x in list(self.person.dose_increase_record.values()) 
+            successful_dose_increases = [x for x in list(self.person.dose_increase_record.values()) 
                             if (x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE) & (x['success'] == True)]
 
             # Determine source
-            if len(last_source) == 0: # if first record --primary
+            if len(successful_dose_increases) == 0: # if first record --primary
                 self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
                 self.dose_type = weighted_random_by_dct(self.person.drug_params['drugs_by_source'][str(self.dose_source)], self.rng)
 
             else:
-                self.dose_source = last_source[-1]['source']
-                self.dose_type = last_source[-1]['dose_type']
+                self.dose_source = successful_dose_increases[-1]['source']
+                self.dose_type = successful_dose_increases[-1]['dose_type']
 
         else: # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
