@@ -351,7 +351,7 @@ class Person:
             increase_dose_src = DoseIncreaseSource.PRIMARY_DOCTOR
 
         # if not first timestep then source is the last source that doesn't equal WILL_NOT_INCREASE
-        else:
+        elif (increase_dose_src == DoseIncreaseSource.WILL_NOT_INCREASE):
             increase_dose_src = [x for x in list(self.dose_increase_record.values()) if x['source'] != DoseIncreaseSource.WILL_NOT_INCREASE][-1]['source']
 
         # Dose type based on dose source
