@@ -116,6 +116,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vou_venv/
 
 # Spyder project settings
 .spyderproject
@@ -140,4 +141,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Moving experiments as it was added to another repo
+experiments/*
+
+
 
