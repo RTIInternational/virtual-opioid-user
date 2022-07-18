@@ -3,7 +3,6 @@ from enum import IntEnum, unique
 from random import Random
 
 import numpy as np
-import pandas as pd
 
 from vou.person import BehaviorWhenResumingUse, DoseIncreaseSource, OverdoseType, Person
 from vou.utils import logistic, weighted_random_by_dct
@@ -37,12 +36,13 @@ class Simulation:
         self.time_since_dose = 0
         self.last_amount_taken = 0
         self.conc_when_dose_taken = 0
-        self.dose_taken_at_t = False
+        self.dose_peak_pending = False
         self.opioid_available = True
         self.integralA = [0]
         self.integralB = [0]
         self.integralC = [0]
         self.integralD = [0]
+        self.dose_method = "Pill"
 
     def simulate(self):
         """
@@ -54,9 +54,6 @@ class Simulation:
         overdoses) over time.
         """
         for t in range(self.days * 100):
-
-            # Reset dose taken indicator for next iteration
-            self.dose_taken_at_t = False
 
             # Add to time since last dose
             self.time_since_dose += 1
@@ -85,25 +82,30 @@ class Simulation:
             # Compute the opioid's effect on the person (concentration - habit)
             self.person.effect.append(self.compute_effect())
 
-            # Now that effect has been calculated, conduct other steps that happen
-            # each time the person takes a dose.
-            if self.dose_taken_at_t is True:
-                # Check for overdose.
-                if self.person.did_overdose() is True:
-                    overdose = self.person.overdose(t)
-                    if overdose == OverdoseType.FATAL:
-                        break
-                # Store effect in a dict of effects at time of taking doses (to be
-                # used in determining when the person increases their dose.)
-                self.person.effect_record[t] = self.person.effect[-1]
-                # Check if the person will increase their dose.
-
-                dose_increase = self.person.will_increase_dose()
-
-                if dose_increase["success"]:
-                    self.person.increase_dose(t)
-
-                self.person.dose_increase_record[t] = dose_increase
+            # If peak concentration for the last dose taken has not been reached
+            # yet, check if it was reached at this time step
+            if self.dose_peak_pending is True:
+                # If concentration at this time step is lower than at the previous
+                # time step, then the previous time step was the dose's peak. Take
+                # all the actions necessary to record the dose peak.
+                if len(self.person.concentration) > 1:
+                    if self.person.concentration[-1] < self.person.concentration[-2]:
+                        # Reset indicator
+                        self.dose_peak_pending = False
+                        # Check for overdose.
+                        if self.person.did_overdose() is True:
+                            overdose = self.person.overdose(t)
+                            if overdose == OverdoseType.FATAL:
+                                break
+                        # Store effect in a dict of effects at time of each dose's peak
+                        # (to be used in determining when the person increases their dose.)
+                        self.person.effect_record[t - 1] = self.person.effect[-2]
+                        self.person.dose_peaks.append(t - 1)
+                        # Check if the person will increase their dose.
+                        dose_increase = self.person.will_increase_dose()
+                        if dose_increase["success"]:
+                            self.person.increase_dose(t)
+                        self.person.dose_increase_record[t] = dose_increase
 
             # Compute the person's threshold and desperation
             # First, compute integrals of concentration to be used in calculating
@@ -114,7 +116,7 @@ class Simulation:
             # Finally, update the person's threshold for the next iteration
             self.person.threshold = self.compute_threshold()
 
-    def compute_concentration(self, ke: float = 0.0594, ka: float = 5):
+    def compute_concentration(self, ke: float = 0.0594):
         """
         Computes the person's concentration of opioids in MME at a time step.
 
@@ -137,6 +139,10 @@ class Simulation:
         Ka can simulate orally consuming pills, where it takes several time steps for the
         dose to be absorbed. See `notebooks/pk_absorb_eliminate.ipynb` for details.
         """
+        if self.dose_method == "Pill":
+            ka = 0.4
+        else:
+            ka = 10
         D = self.conc_when_dose_taken + self.last_amount_taken
         t = self.time_since_dose
 
@@ -144,15 +150,18 @@ class Simulation:
 
         return C
 
-    def compute_effect(self, ke: float = 0.0594, ka: float = 5):
+    def compute_effect(self, ke: float = 0.0594):
         """
         Computes opioid's effect on the the person at a time step, given their
         concentration of opioid and opioid use habit.
         
-        Ka is a calibrated parameter and Ke can be adjusted to simualte different modes of
-        administration. See docstring for compute_concentration for details. The same value
-        of Ke should always be used for compute_concentration and compute_effect.
+        Ke is a calibrated parameter and Ka can be adjusted to simulate different modes of
+        administration. See docstring for compute_concentration for details.
         """
+        if self.dose_method == "Pill":
+            ka = 0.4
+        else:
+            ka = 10
         D = self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
         t = self.time_since_dose
 
@@ -250,12 +259,10 @@ class Simulation:
             self.rng,
         )
 
-        # Update the dose taken indicator, which will cue additional actions later
-        # in the time step.
-        self.dose_taken_at_t = True
-        # Add t to the person's list of times at which a dose was taken, which is used
-        # in determining when they will increase their dose.
-        self.person.took_dose.append(t)
+        # Update the dose peak pending indicator, which will cue all time steps in the
+        # future to check if peak concentration was reached. When peak concentration is
+        # reached, this will be set back to false.
+        self.dose_peak_pending = True
         # Update the variable storing the person's concentration when the dose was
         # taken to be used for later concentration calculations.
         self.conc_when_dose_taken = self.person.concentration[-1]

@@ -69,7 +69,7 @@ class Person:
         self.effect = []
         self.overdoses = []
         self.effect_record = {}
-        self.took_dose = []
+        self.dose_peaks = []
         self.dose_increase_record = {}
 
     def update_downward_pressure(
@@ -163,8 +163,8 @@ class Person:
         roughly equals 2. We define "excess" as (dose / tolerance) - 1, or roughly 1 at
         steady state. We multiply the person's baseline OD risk by this excess squared.
         """
-        dose = self.concentration[-1]
-        tolerance = self.habit[-1]
+        dose = self.concentration[-2]
+        tolerance = self.habit[-2]
 
         # bound extremely low tolerance values to avoid huge excess values
         tolerance = max(1, tolerance)
@@ -269,7 +269,7 @@ class Person:
 
         last_n_dose_effects = [
             self.effect_record[d]
-            for d in self.took_dose[-effect_window:]
+            for d in self.dose_peaks[-effect_window:]
             if d > self.last_dose_increase
         ]
 
