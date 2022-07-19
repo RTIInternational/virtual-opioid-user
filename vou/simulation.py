@@ -1,10 +1,10 @@
 import math
-from enum import IntEnum, unique
 from random import Random
 
 import numpy as np
 
-from vou.person import BehaviorWhenResumingUse, DoseIncreaseSource, OverdoseType, Person
+from vou.person import (BehaviorWhenResumingUse, DoseIncreaseSource,
+                        OverdoseType, Person)
 from vou.utils import logistic, weighted_random_by_dct
 
 
