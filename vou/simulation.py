@@ -55,6 +55,9 @@ class Simulation:
         """
         for t in range(self.days * 100):
 
+            # Reset dose taken indicator for next iteration
+            dose_taken_at_t = False
+
             # Add to time since last dose
             self.time_since_dose += 1
 
@@ -75,6 +78,7 @@ class Simulation:
                 # if self.person.will_take_dose(t) is True:
                 if self.person.will_take_dose(t) is True or t % 100 == 0:
                     self.record_dose_taken(t)
+                    dose_taken_at_t = True
 
             # Compute the person's opioid use habit at t
             self.person.habit.append(self.compute_habit(t))
@@ -84,7 +88,7 @@ class Simulation:
 
             # If peak concentration for the last dose taken has not been reached
             # yet, check if it was reached at this time step
-            if self.dose_peak_pending is True:
+            if self.dose_peak_pending is True and dose_taken_at_t is False:
                 # If concentration at this time step is lower than at the previous
                 # time step, then the previous time step was the dose's peak. Take
                 # all the actions necessary to record the dose peak.
