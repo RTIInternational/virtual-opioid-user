@@ -3,8 +3,7 @@ from random import Random
 
 import numpy as np
 
-from vou.person import (BehaviorWhenResumingUse, DoseIncreaseSource,
-                        OverdoseType, Person)
+from vou.person import BehaviorWhenResumingUse, DoseIncreaseSource, OverdoseType, Person
 from vou.utils import logistic, weighted_random_by_dct
 
 
@@ -147,12 +146,13 @@ class Simulation:
             ka = 0.4
         else:
             ka = 10
-        D = self.conc_when_dose_taken + self.last_amount_taken
+
+        starting_amount = self.conc_when_dose_taken + self.last_amount_taken
         t = self.time_since_dose
 
-        C = ((D * ka) / (ka - ke)) * ((math.exp(-ke * t)) - (math.exp(-ka * t)))
-
-        return C
+        return ((starting_amount * ka) / (ka - ke)) * (
+            (math.exp(-ke * t)) - (math.exp(-ka * t))
+        )
 
     def compute_effect(self, ke: float = 0.0594):
         """
@@ -166,12 +166,17 @@ class Simulation:
             ka = 0.4
         else:
             ka = 10
-        D = self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
+
+        starting_amount = (
+            self.conc_when_dose_taken + self.last_amount_taken - self.person.habit[-1]
+        )
         t = self.time_since_dose
 
-        C = ((D * ka) / (ka - ke)) * ((math.exp(-ke * t)) - (math.exp(-ka * t)))
+        effect = ((starting_amount * ka) / (ka - ke)) * (
+            (math.exp(-ke * t)) - (math.exp(-ka * t))
+        )
 
-        return max(C, 0)
+        return max(effect, 0)
 
     def update_availability(self, t: int):
         """
