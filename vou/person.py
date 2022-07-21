@@ -163,6 +163,10 @@ class Person:
         roughly equals 2. We define "excess" as (dose / tolerance) - 1, or roughly 1 at
         steady state. We multiply the person's baseline OD risk by this excess squared.
         """
+        # Use the second-to-last values of concentration and habit, since this method
+        # is designed to be invoked when a dose peak has been detected. The peak finding
+        # logic detects peaks at the time step *after* the peak occurred, so the peak
+        # values are one item back in these lists.
         dose = self.concentration[-2]
         tolerance = self.habit[-2]
 
