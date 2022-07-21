@@ -87,28 +87,30 @@ class Simulation:
 
             # If peak concentration for the last dose taken has not been reached
             # yet, check if it was reached at this time step
-            if self.dose_peak_pending is True and dose_taken_at_t is False:
-                # If concentration at this time step is lower than at the previous
-                # time step, then the previous time step was the dose's peak. Take
-                # all the actions necessary to record the dose peak.
-                if len(self.person.concentration) > 1:
-                    if self.person.concentration[-1] < self.person.concentration[-2]:
-                        # Reset indicator
-                        self.dose_peak_pending = False
-                        # Check for overdose.
-                        if self.person.did_overdose() is True:
-                            overdose = self.person.overdose(t)
-                            if overdose == OverdoseType.FATAL:
-                                break
-                        # Store effect in a dict of effects at time of each dose's peak
-                        # (to be used in determining when the person increases their dose.)
-                        self.person.effect_record[t - 1] = self.person.effect[-2]
-                        self.person.dose_peaks.append(t - 1)
-                        # Check if the person will increase their dose.
-                        dose_increase = self.person.will_increase_dose()
-                        if dose_increase["success"]:
-                            self.person.increase_dose(t)
-                        self.person.dose_increase_record[t] = dose_increase
+            if (
+                self.dose_peak_pending is True
+                and dose_taken_at_t is False
+                and len(self.person.concentration) > 1
+            ):
+                # If concentration at t is lower than at t-1, then t-1 was the dose's peak.
+                # Take all the actions necessary to record the dose peak.
+                if self.person.concentration[-1] < self.person.concentration[-2]:
+                    # Reset indicator
+                    self.dose_peak_pending = False
+                    # Check for overdose.
+                    if self.person.did_overdose() is True:
+                        overdose = self.person.overdose(t)
+                        if overdose == OverdoseType.FATAL:
+                            break
+                    # Store effect in a dict of effects at time of each dose's peak
+                    # (to be used in determining when the person increases their dose.)
+                    self.person.effect_record[t - 1] = self.person.effect[-2]
+                    self.person.dose_peaks.append(t - 1)
+                    # Check if the person will increase their dose.
+                    dose_increase = self.person.will_increase_dose()
+                    if dose_increase["success"]:
+                        self.person.increase_dose(t)
+                    self.person.dose_increase_record[t] = dose_increase
 
             # Compute the person's threshold and desperation
             # First, compute integrals of concentration to be used in calculating
