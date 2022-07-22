@@ -42,6 +42,7 @@ class Simulation:
         self.integralC = [0]
         self.integralD = [0]
         self.dose_method = "Pill"
+        self.compliant = True
 
     def simulate(self):
         """
@@ -269,6 +270,13 @@ class Simulation:
             self.person.drug_params["admin_mode_distributions"][self.dose_type],
             self.rng,
         )
+
+        # check if the person is compliant (non-compliant if source != PRIMARY_DOCTOR)
+        if self.dose_source == DoseIncreaseSource.PRIMARY_DOCTOR:
+            self.compliant = True
+
+        elif self.dose_source != DoseIncreaseSource.PRIMARY_DOCTOR:
+            self.compliant = False
 
         # Update the dose peak pending indicator, which will cue all time steps in the
         # future to check if peak concentration was reached. When peak concentration is
