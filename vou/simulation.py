@@ -297,6 +297,9 @@ class Simulation:
         self.person.tolerance_input_sum += new_conc
         self.person.tolerance_input.append(new_conc)
 
+        # Add the person's dose_source to the list
+        self.person.dose_sources.append(self.dose_source)
+
     def compute_amount_taken(self):
         """
         Computes the amount of opioid taken in MME when the person takes a dose.
