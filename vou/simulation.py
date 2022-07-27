@@ -42,6 +42,7 @@ class Simulation:
         self.integralC = [0]
         self.integralD = [0]
         self.dose_method = "Pill"
+        self.compliant = True
 
     def simulate(self):
         """
@@ -270,6 +271,13 @@ class Simulation:
             self.rng,
         )
 
+        # check if the person is compliant (non-compliant if source != PRIMARY_DOCTOR)
+        if self.dose_source == DoseIncreaseSource.PRIMARY_DOCTOR:
+            self.compliant = True
+
+        elif self.dose_source != DoseIncreaseSource.PRIMARY_DOCTOR:
+            self.compliant = False
+
         # Update the dose peak pending indicator, which will cue all time steps in the
         # future to check if peak concentration was reached. When peak concentration is
         # reached, this will be set back to false.
@@ -288,6 +296,9 @@ class Simulation:
         self.person.tolerance_input_sum -= self.person.tolerance_input.pop()
         self.person.tolerance_input_sum += new_conc
         self.person.tolerance_input.append(new_conc)
+
+        # Add the person's dose_source to the list
+        self.person.dose_sources.append(self.dose_source)
 
     def compute_amount_taken(self):
         """
