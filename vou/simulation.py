@@ -17,7 +17,7 @@ class Simulation:
         resume_use_day: int = None,
         dose_variability: float = 0.1,
         availability: float = 0.9,
-        fentanyl_prob: float = 0.0001,
+        bad_batch_prob: float = 0.0001,
         counterfeit_prob: float = 0.1,
         source_variability: float = 0.2,
         fentanyl_variability: float = 0.1,
@@ -30,7 +30,7 @@ class Simulation:
         self.resume_use_time = None if resume_use_day is None else resume_use_day * 100
         self.dose_variability = dose_variability
         self.availability = availability
-        self.fentanyl_prob = fentanyl_prob
+        self.bad_batch_prob = bad_batch_prob
         self.counterfeit_prob = counterfeit_prob
         self.source_variability = source_variability
         self.fentanyl_variability = fentanyl_variability
@@ -340,9 +340,6 @@ class Simulation:
                 1 - self.source_variability, 1 + self.source_variability
             )
 
-        else:
-            modified_dose = modified_dose
-
         # There are no counterfeit pills unless from a dealer
         if (self.rng.random() < self.counterfeit_prob) & (
             self.dose_source == DoseIncreaseSource.DEALER
@@ -351,7 +348,7 @@ class Simulation:
             modified_dose = modified_dose * self.rng.uniform(
                 1 - self.dose_variability, 1 + self.dose_variability
             )
-            if self.rng.random() < self.fentanyl_prob:
+            if self.rng.random() < self.bad_batch_prob:
                 modified_dose = modified_dose * (1 + self.rng.expovariate(1 / 0.25))
 
         if self.dose_type == "fentanyl":
