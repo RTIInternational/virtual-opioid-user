@@ -1,16 +1,17 @@
-from vou.person import Person, BehaviorWhenResumingUse
-from vou.simulation import Simulation
-from vou.visualize import visualize
-from vou.opioid import mme_equivalents
-
 from random import Random
 
 import streamlit as st
+
+from vou.opioid import mme_equivalents
+from vou.person import BehaviorWhenResumingUse, Opioid, Person
+from vou.simulation import Simulation
+from vou.visualize import visualize
 
 
 # @st.cache
 def simulate(
     rng: Random,
+    starting_opioid: Opioid = Opioid.HYDROCODONE,
     starting_dose: int = 50,
     dose_increase: int = 25,
     base_threshold: float = 0.001,
@@ -34,12 +35,12 @@ def simulate(
     Streamlit caching and avoid running the simulation repeatedly when an app user
     changes visualization parameters.
     """
-    dose_multiplier = mme_equivalents[opioid]
 
     person = Person(
         rng=rng,
-        starting_dose=starting_dose * dose_multiplier,
-        dose_increase=dose_increase * dose_multiplier,
+        starting_opioid=starting_opioid,
+        starting_dose=starting_dose,
+        dose_increase=dose_increase,
         base_threshold=base_threshold,
         tolerance_window=tolerance_window,
         external_risk=external_risk,
@@ -129,7 +130,7 @@ if __name__ == "__main__":
             )
         sim_params = st.expander("Simulation Parameters")
         with sim_params:
-            opioid = st.selectbox(
+            opioid_str = st.selectbox(
                 label="Select the opioid prescribed to the user",
                 help="The user takes one opioid type throughout the simulation. They can increase their dose over time, but always continue to take the same opioid. The chosen opioid/dose combination is converted to morphine milligram equivalents within the simulation.",
                 options=[
@@ -148,6 +149,7 @@ if __name__ == "__main__":
                 ],
                 index=2,
             )
+            opioid = Opioid[opioid_str.upper()]
             starting_dose = st.slider(
                 label="Select the user's starting dose in MME",
                 help="The user starts the simulation taking their preferred dose consistently. This parameter controls their preferred dose at the start of the simulation.",
@@ -165,8 +167,8 @@ if __name__ == "__main__":
                 step=5,
             )
             availability = st.slider(
-                label="Select probability that opioids will be available per day",
-                help="For various reasons (e.g. supply, ability to pay), the user may not always be able to get opioids when they want to. The model updates opioid availability each day. This parameter controls the probability that opioids will be available each day.",
+                label="Select probability that opioids will be available when the user seeks them from a dealer",
+                help="When the user is getting opioids from a prescription, the model considers opioids to be always available. When the user is getting opioids from a dealer, for various reasons (e.g. supply, ability to pay), they may not always be able to get opioids when they want to. The model updates dealer opioid availability each day. This parameter controls the probability that opioids will be available each day.",
                 min_value=0.1,
                 max_value=1.0,
                 value=0.75,
@@ -239,6 +241,7 @@ if __name__ == "__main__":
 
     sim = simulate(
         rng=Random(seed),
+        starting_opioid=opioid,
         starting_dose=starting_dose,
         dose_increase=dose_increase,
         external_risk=external_risk,
