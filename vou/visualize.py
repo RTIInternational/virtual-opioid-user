@@ -1,8 +1,7 @@
-from vou.person import Person
-from vou.opioid import mme_equivalents
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+
+from vou.person import DoseIncreaseSource, Opioid, Person
 
 
 def make_ibm_color_palette():
@@ -20,7 +19,7 @@ def visualize(
     show_desperation: bool = False,
     show_habit: bool = True,
     show_effect: bool = True,
-    opioid: str = "Hydrocodone",
+    opioid: Opioid = Opioid.HYDROCODONE,
 ):
     """
     Generates a plot of the person's opioid concentration, habit, effect,
@@ -30,7 +29,7 @@ def visualize(
 
     Start day and duration parameters allow control over time frame shown.
     """
-    dose_multiplier = mme_equivalents[opioid]
+    dose_multiplier = person.params["mme_equivalents"][str(opioid)]
 
     palette = make_ibm_color_palette()
     start_time = 0 if start_day == 0 else start_day * 100
@@ -68,7 +67,7 @@ def visualize(
     if len(person.concentration) < end_time:
         ax1.set_xlim(right=end_time)
 
-    ax1.set_ylabel(f"Milligrams of {opioid}")
+    ax1.set_ylabel(f"Milligrams of {str(opioid)}")
 
     if show_desperation:
         ax2 = ax1.twinx()
@@ -110,6 +109,46 @@ def visualize(
             zorder=4,
         )
         ax1.legend()
+
+    # transform dose increase record to plot sources over time
+    color_map = {
+        DoseIncreaseSource.PRIMARY_DOCTOR: "limegreen",
+        DoseIncreaseSource.SECONDARY_DOCTOR: "goldenrod",
+        DoseIncreaseSource.DEALER: "firebrick",
+    }
+
+    dose_increases = {
+        k: v for k, v in person.dose_increase_record.items() if v["success"] == True
+    }
+    dose_increase_times = [k for k in dose_increases.keys()]
+    dose_increase_times.insert(0, 0)
+    dose_increase_sources = [v["source"] for v in dose_increases.values()]
+    dose_increase_sources.insert(0, DoseIncreaseSource.PRIMARY_DOCTOR)
+
+    for i, t in enumerate(dose_increase_times):
+        if i == len(dose_increase_times) - 1:
+            xmax = end_time
+        else:
+            xmax = dose_increase_times[i + 1]
+        ax1.hlines(
+            y=-20,
+            xmin=t,
+            xmax=xmax,
+            colors=color_map[dose_increase_sources[i]],
+            label=str(dose_increase_sources[i]),
+            lw=5,
+        )
+
+    def legend_without_duplicate_labels(ax):
+        handles, labels = ax.get_legend_handles_labels()
+        unique = [
+            (h, l)
+            for i, (h, l) in enumerate(zip(handles, labels))
+            if l not in labels[:i]
+        ]
+        ax.legend(*zip(*unique))
+
+    legend_without_duplicate_labels(ax1)
 
     ax1.set_xlabel("Day")
     scale = 100

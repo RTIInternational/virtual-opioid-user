@@ -28,11 +28,36 @@ class DoseIncreaseSource(IntEnum):
     WILL_NOT_INCREASE = 3
     FIRST_ATTEMPT = 4
 
+    def __str__(self):
+        return self.name.lower()
+
+
+@unique
+class Opioid(IntEnum):
+    CODEINE = 0
+    DIHYDROCODEINE = 1
+    HYDROCODONE = 2
+    HYDROMORPHONE = 3
+    LEVORPHANOL_TARTRATE = 4
+    MEPERIDINE_HCL = 5
+    MORPHINE = 6
+    OXYCODONE = 7
+    OXYMORPHONE = 8
+    PENTAZOCINE = 9
+    TAPENTADOL = 10
+    TRAMADOL = 11
+    HEROIN = 12
+    FENTANYL = 13
+
+    def __str__(self):
+        return self.name.lower()
+
 
 class Person:
     def __init__(
         self,
         rng: Random,
+        starting_opioid: Opioid = Opioid.HYDROCODONE,
         starting_dose: int = 50,
         dose_increase: int = 25,
         base_threshold: float = 0.001,
@@ -44,21 +69,23 @@ class Person:
     ):
         # Parameters
         self.rng = rng
-        self.starting_dose = starting_dose
-        self.dose = starting_dose
-        self.dose_increase = dose_increase
         self.threshold = base_threshold
         self.tolerance_window = tolerance_window
         self.external_risk = external_risk
         self.internal_risk = internal_risk
         self.behavioral_variability = behavioral_variability
-        self.update_downward_pressure()
-        self.set_risk_logit()
         self.behavior_when_resuming_use = behavior_when_resuming_use
         self.post_OD_use_pause = None
         self.last_dose_increase = 0
+        self.params = load_json("vou/parameters.json")
 
-        self.drug_params = load_json("vou/drug_params.json")
+        # Convert starting opioid to MME
+        dose_multiplier = self.params["mme_equivalents"][str(starting_opioid)]
+        self.starting_dose = starting_dose * dose_multiplier
+        self.dose = self.starting_dose
+        self.dose_increase = dose_increase * dose_multiplier
+        self.update_downward_pressure()
+        self.set_risk_logit()
 
         # A bunch of empty lists to store data during simulation
         self.concentration = []
@@ -251,16 +278,14 @@ class Person:
         this is their second time, they will have a 50% chance of trying through a secondary
         doctor or a dealer.
         """
-        self.source_probability_primary = self.drug_params["source_probability"][
+        self.source_probability_primary = self.params["source_probability"][
             "initial_doctor_increase"
         ]
-        self.source_probability_secondary = self.drug_params["source_probability"][
+        self.source_probability_secondary = self.params["source_probability"][
             "secondary_doctor"
         ]
-        self.source_probability_dealer = self.drug_params["source_probability"][
-            "dealer"
-        ]
-        self.secondary_doc_dealer_prob = self.drug_params["secondary_doc_dealer_prob"]
+        self.source_probability_dealer = self.params["source_probability"]["dealer"]
+        self.secondary_doc_dealer_prob = self.params["secondary_doc_dealer_prob"]
 
         if len(list(self.dose_increase_record.values())) == 0:
             last_attempt_src = DoseIncreaseSource.PRIMARY_DOCTOR
@@ -366,7 +391,7 @@ class Person:
 
         # Dose type based on dose source
         increase_dose_type = weighted_random_by_dct(
-            self.drug_params["drugs_by_source"][str(increase_dose_src)], self.rng
+            self.params["drugs_by_source"][str(increase_dose_src)], self.rng
         )
 
         return {

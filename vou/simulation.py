@@ -42,6 +42,7 @@ class Simulation:
         self.integralC = [0]
         self.integralD = [0]
         self.dose_method = "Pill"
+        self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
         self.compliant = True
 
     def simulate(self):
@@ -197,16 +198,26 @@ class Simulation:
         """
         # Step 1
         if t % 100 == 0:
-            rand = self.rng.random()
-            # Adjust availability by desperation - more desperate user seeks drug
-            # more aggressively.
-            if self.person.desperation:
-                if self.person.desperation[-2] > 1:
-                    rand = rand / self.person.desperation[-2]
-            if rand < self.availability:
+            if self.dose_source in [
+                DoseIncreaseSource.PRIMARY_DOCTOR,
+                DoseIncreaseSource.SECONDARY_DOCTOR,
+            ]:
                 self.opioid_available = True
+            elif self.dose_source == DoseIncreaseSource.DEALER:
+                rand = self.rng.random()
+                # Adjust availability by desperation - more desperate user seeks drug
+                # more aggressively.
+                if self.person.desperation:
+                    if self.person.desperation[-2] > 1:
+                        rand = rand / self.person.desperation[-2]
+                if rand < self.availability:
+                    self.opioid_available = True
+                else:
+                    self.opioid_available = False
             else:
-                self.opioid_available = False
+                raise ValueError(
+                    f"Unexpected value of simulation.dose_source: {self.dose_source}"
+                )
         # Step 2
         if self.stop_use_time:
             if self.resume_use_time:
@@ -250,7 +261,7 @@ class Simulation:
             if len(successful_dose_increases) == 0:  # if first record --primary
                 self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
                 self.dose_type = weighted_random_by_dct(
-                    self.person.drug_params["drugs_by_source"][str(self.dose_source)],
+                    self.person.params["drugs_by_source"][str(self.dose_source)],
                     self.rng,
                 )
 
@@ -261,14 +272,12 @@ class Simulation:
         else:  # if it's the first timestamp go to primary
             self.dose_source = DoseIncreaseSource.PRIMARY_DOCTOR
             self.dose_type = weighted_random_by_dct(
-                self.person.drug_params["drugs_by_source"][str(self.dose_source)],
-                self.rng,
+                self.person.params["drugs_by_source"][str(self.dose_source)], self.rng,
             )
 
         # Determine the method of use based on the drug
         self.dose_method = weighted_random_by_dct(
-            self.person.drug_params["admin_mode_distributions"][self.dose_type],
-            self.rng,
+            self.person.params["admin_mode_distributions"][self.dose_type], self.rng,
         )
 
         # check if the person is compliant (non-compliant if source != PRIMARY_DOCTOR)
