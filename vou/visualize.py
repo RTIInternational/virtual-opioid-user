@@ -1,8 +1,8 @@
-from vou.person import Person
-from vou.opioid import mme_equivalents
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+
+from vou.opioid import mme_equivalents
+from vou.person import Person
 
 
 def make_ibm_color_palette():
@@ -76,12 +76,12 @@ def visualize(
             range(start_time, end_time),
             [d / dose_multiplier for d in person.desperation[start_time:end_time]]
             + [0] * max(0, (end_time - start_time) - len(person.desperation)),
-            label="Desperation",
+            label="Craving",
             color=palette[3],
             zorder=3,
         )
         ax2.tick_params(axis="y")
-        ax2.set_ylabel("Desperation (Arbitrary Units)")
+        ax2.set_ylabel("Craving (Arbitrary Units)")
 
         ax2.vlines(
             x=[od for od in person.overdoses if start_time <= od < end_time],
@@ -90,7 +90,7 @@ def visualize(
             colors="black",
             linestyles="dotted",
             label="OD",
-            zorder=4,
+            zorder=5,
         )
 
         lines_1, labels_1 = ax1.get_legend_handles_labels()
@@ -106,8 +106,9 @@ def visualize(
             ymax=max(person.concentration) / dose_multiplier,
             colors="black",
             linestyles="dotted",
+            linewidth=3,
             label="OD",
-            zorder=4,
+            zorder=5,
         )
         ax1.legend()
 
@@ -115,5 +116,6 @@ def visualize(
     scale = 100
     ticks_x = ticker.FuncFormatter(lambda x, pos: "{0:g}".format(x / scale))
     ax1.xaxis.set_major_formatter(ticks_x)
+    plt.rcParams.update({"font.size": 15})
 
     return fig
