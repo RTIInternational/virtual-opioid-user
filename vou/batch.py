@@ -13,9 +13,10 @@ from vou.utils import load_json
 
 
 class BatchSimulation:
-    def __init__(self, params: Path, dynamic_params: Path):
+    def __init__(self, params: Path, dynamic_params: Path, drug_parameter_path: Path):
         self.params = load_json(params)
         self.dynamic_params = pd.read_csv(dynamic_params)
+        self.drug_parameter_path = drug_parameter_path
 
     def simulate(self, parallel: bool = True):
         """
@@ -72,6 +73,7 @@ class BatchSimulation:
                 external_risk=params["external_risk"],
                 internal_risk=params["internal_risk"],
                 behavioral_variability=params["behavioral_variability"],
+                drug_parameter_path=self.drug_parameter_path,
             )
             simulation = Simulation(
                 person=person,
