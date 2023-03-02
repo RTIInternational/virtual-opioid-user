@@ -387,14 +387,7 @@ class Simulation:
         return modified_dose
 
     def compute_habit(
-        self,
-        t: int,
-        # conc_multiplier: int = 1.85,
-        # L1: float = 1.0275,
-        # L2: float = 0.58,
-        # K1: float = 0.2,
-        # K2: float = 0.0002,
-        # X1: float = 0.175,
+        self, t: int,
     ):
         """
         Computes the person's opioid use "habit" at a time point.
