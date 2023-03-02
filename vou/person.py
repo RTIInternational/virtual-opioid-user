@@ -1,6 +1,7 @@
 from collections import deque
 from enum import IntEnum, unique
 from itertools import repeat
+from pathlib import Path
 from random import Random
 
 import numpy as np
@@ -66,6 +67,7 @@ class Person:
         internal_risk: float = 0.5,
         behavioral_variability: float = 0.1,
         behavior_when_resuming_use: BehaviorWhenResumingUse = None,
+        drug_parameter_path: Path = "vou/parameters.json",
     ):
         # Parameters
         self.rng = rng
@@ -77,7 +79,7 @@ class Person:
         self.behavior_when_resuming_use = behavior_when_resuming_use
         self.post_OD_use_pause = None
         self.last_dose_increase = 0
-        self.params = load_json("vou/parameters.json")
+        self.params = load_json(drug_parameter_path)
 
         # Convert starting opioid to MME
         dose_multiplier = self.params["mme_equivalents"][str(starting_opioid)]
