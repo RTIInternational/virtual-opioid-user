@@ -25,7 +25,7 @@ def simulate(
     dose_variability: float = 0.1,
     behavioral_variability: float = 0.1,
     availability: float = 0.9,
-    fentanyl_prob: float = 0.0001,
+    bad_batch_prob: float = 0.0001,
     counterfeit_prob: float = 0.1,
     opioid: str = "Hydrocodone",
 ):
@@ -56,7 +56,7 @@ def simulate(
         resume_use_day=resume_use_day,
         dose_variability=dose_variability,
         availability=availability,
-        fentanyl_prob=fentanyl_prob,
+        bad_batch_prob=bad_batch_prob,
         counterfeit_prob=counterfeit_prob,
     )
     simulation.simulate()
@@ -190,7 +190,7 @@ if __name__ == "__main__":
                 value=0.5,
                 step=0.05,
             )
-            fentanyl_prob = st.slider(
+            bad_batch_prob = st.slider(
                 label="Select probability that a counterfeit pill is adulterated with fentanyl",
                 help="In addition to regular variability of dose, some counterfeits may be far more potent than expected due to adulteration with powerful synthetic opioids like fentanyl. This parameter controls the probability that a counterfeit dose will be adulterated with a synthetic opioid.",
                 min_value=0.0,
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         dose_variability=dose_variability,
         availability=availability,
         behavioral_variability=behavioral_variability,
-        fentanyl_prob=fentanyl_prob,
+        bad_batch_prob=bad_batch_prob,
         counterfeit_prob=counterfeit_prob,
         opioid=opioid,
     )

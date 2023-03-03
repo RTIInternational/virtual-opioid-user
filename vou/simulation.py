@@ -1,10 +1,20 @@
 import math
 from random import Random
+from typing import TypedDict
 
 import numpy as np
 
 from vou.person import BehaviorWhenResumingUse, DoseIncreaseSource, OverdoseType, Person
 from vou.utils import logistic, weighted_random_by_dct
+
+
+class HabitParams(TypedDict):
+    conc_multiplier: float
+    L1: float
+    L2: float
+    K1: float
+    K2: float
+    X1: float
 
 
 class Simulation:
@@ -21,6 +31,14 @@ class Simulation:
         counterfeit_prob: float = 0.1,
         source_variability: float = 0.2,
         fentanyl_variability: float = 0.1,
+        habit_params: HabitParams = {
+            "conc_multiplier": 1.85,
+            "L1": 1.0275,
+            "L2": 0.58,
+            "K1": 0.2,
+            "K2": 0.0002,
+            "X1": 0.175,
+        },
     ):
         # Parameters
         self.person = person
@@ -34,6 +52,7 @@ class Simulation:
         self.counterfeit_prob = counterfeit_prob
         self.source_variability = source_variability
         self.fentanyl_variability = fentanyl_variability
+        self.habit_params = habit_params
 
         # Variables used in simulation
         self.time_since_dose = 0
@@ -368,14 +387,7 @@ class Simulation:
         return modified_dose
 
     def compute_habit(
-        self,
-        t: int,
-        conc_multiplier: int = 1.85,
-        L1: float = 1.0275,
-        L2: float = 0.58,
-        K1: float = 0.2,
-        K2: float = 0.0002,
-        X1: float = 0.175,
+        self, t: int,
     ):
         """
         Computes the person's opioid use "habit" at a time point.
@@ -397,7 +409,7 @@ class Simulation:
         # small relative to concentration.
         rolling_concentration = (
             self.person.tolerance_input_sum / self.person.tolerance_window
-        ) * conc_multiplier
+        ) * self.habit_params["conc_multiplier"]
 
         # Compute habit based on a logistic function of the rolling concentration.
         #
@@ -419,9 +431,9 @@ class Simulation:
         # curve at a wide range of doses.
         return logistic(
             x=rolling_concentration,
-            L=(self.person.dose ** L1) * L2,
-            k=K1 - (self.person.dose * K2),
-            x0=self.person.dose * X1,
+            L=(self.person.dose ** self.habit_params["L1"]) * self.habit_params["L2"],
+            k=self.habit_params["K1"] - (self.person.dose * self.habit_params["K2"]),
+            x0=self.person.dose * self.habit_params["X1"],
         )
 
     def compute_concentration_integrals(
