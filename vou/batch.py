@@ -13,7 +13,9 @@ from vou.utils import load_json
 
 
 class BatchSimulation:
-    def __init__(self, params: Path, dynamic_params: Path, drug_parameter_path: Path):
+    def __init__(
+        self, params: Path, dynamic_params: Path, drug_parameter_path: Path,
+    ):
         self.params = load_json(params)
         self.dynamic_params = pd.read_csv(dynamic_params)
         self.drug_parameter_path = drug_parameter_path
@@ -82,6 +84,7 @@ class BatchSimulation:
                 availability=params["availability"],
                 fentanyl_prob=params["fentanyl_prob"],
                 counterfeit_prob=params["counterfeit_prob"],
+                habit_params=params["habit_params"],
             )
             simulation.simulate()
             return simulation
