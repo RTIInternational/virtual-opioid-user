@@ -82,7 +82,7 @@ class BatchSimulation:
                 rng=rng,
                 dose_variability=params["dose_variability"],
                 availability=params["availability"],
-                fentanyl_prob=params["fentanyl_prob"],
+                fentanyl_variability=params["fentanyl_prob"],
                 counterfeit_prob=params["counterfeit_prob"],
                 habit_params=params["habit_params"],
             )
